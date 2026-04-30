@@ -9,13 +9,15 @@ Nuvo emits HTTP POST webhook events to customer-configured endpoints when specif
 
 ## Webhook Event Types
 
-Nuvo supports the following webhook event types:
+Every webhook Nuvo emits delivers the **same payload shape**; only the `eventType` field differs. Inspect `eventType` to dispatch on the event:
 
-1. **`CREDIT_APP_NEW`** - A new credit application has been submitted
-2. **`CREDIT_LIMIT_CHANGE`** - Credit limit has been modified for an existing customer
-3. **`CREDIT_APP_STATUS_CHANGE`** - Application status has changed (approval, rejection, etc.)
-4. **`CUSTOMER_APP_SIGNATURE_REQUESTED`** - A signature has been requested on a customer application
-5. **`MANUAL`** - Manually triggered webhook (used for testing and special cases)
+| `eventType`                          | Fires when                                                       |
+|--------------------------------------|------------------------------------------------------------------|
+| `CREDIT_APP_NEW`                     | A buyer submits a new credit application.                        |
+| `CREDIT_LIMIT_CHANGE`                | A credit limit is modified for an existing customer.             |
+| `CREDIT_APP_STATUS_CHANGE`           | An application's review status changes (approval, rejection, …). |
+| `CUSTOMER_APP_SIGNATURE_REQUESTED`   | A signature is requested on a customer application.              |
+| `MANUAL`                             | A webhook is manually triggered (testing or special cases).      |
 
 ## Request Format
 
