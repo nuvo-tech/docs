@@ -16,7 +16,7 @@ a[href="/"],
   gap: 0.5rem;
 }
 
-a[href="/"]::after,
+/* a[href="/"]::after,
 #navbar-logo::after,
 .navbar-logo::after {
   content: "Documentation";
@@ -25,7 +25,7 @@ a[href="/"]::after,
   color: inherit;
   white-space: nowrap;
   display: inline-block;
-}
+} */
 
 div:has(> [data-component-part="version-select-trigger"]) {
   position: absolute;

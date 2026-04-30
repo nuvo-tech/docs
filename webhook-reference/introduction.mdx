@@ -9,6 +9,8 @@ Nuvo emits HTTP POST webhook events to customer-configured endpoints when specif
 
 ## Webhook Event Types
 
+You can subscribe your endpoint to any subset of the event types below — Nuvo will only deliver events you've opted into. To configure which event types your endpoint receives, contact your Customer Success Manager.
+
 Every webhook Nuvo emits delivers the **same payload shape**; only the `eventType` field differs. Inspect `eventType` to dispatch on the event:
 
 | `eventType`                          | Fires when                                                       |
