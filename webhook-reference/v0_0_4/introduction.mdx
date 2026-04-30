@@ -9,8 +9,6 @@ Nuvo emits HTTP POST webhook events to customer-configured endpoints when specif
 
 ## Webhook Event Types
 
-You can subscribe your endpoint to any subset of the event types below — Nuvo will only deliver events you've opted into. To configure which event types your endpoint receives, contact your Customer Success Manager.
-
 Every webhook Nuvo emits delivers the **same payload shape**; only the `eventType` field differs. Inspect `eventType` to dispatch on the event:
 
 | `eventType`                          | Fires when                                                       |
@@ -26,7 +24,7 @@ Every webhook Nuvo emits delivers the **same payload shape**; only the `eventTyp
 - **Method**: POST
 - **Content-Type**: application/json
 - **Timeout**: 10 seconds (your endpoint must respond within this time)
-- **Current version**: `0.0.9` (check `webhookVersion` in the payload)
+- **Schema version**: `0.0.4` (latest is `0.0.9`; check `webhookVersion` in the payload)
 
 **reviewStatus values**: `INCOMPLETE_APPLICATION`, `ACTIVE_ACCOUNT`, `PLACEHOLDER_APPLICATION`, `INCOMPLETE_ACCOUNT`, `APPLICATION`, `PLACEHOLDER_ACCOUNT`, `REMOVED_ACCOUNT`, `REVIEW_ACCOUNT`, `REJECTED_APPLICATION`
 

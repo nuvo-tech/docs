@@ -1,0 +1,80 @@
+---
+title: Introduction
+description: Nuvo webhook events overview, signing, and retries
+---
+
+# Overview
+
+Nuvo emits HTTP POST webhook events to customer-configured endpoints when specific events occur in the credit application system. This enables real-time event-driven integrations without polling.
+
+## Webhook Event Types
+
+Every webhook Nuvo emits delivers the **same payload shape**; only the `eventType` field differs. Inspect `eventType` to dispatch on the event:
+
+| `eventType`                          | Fires when                                                       |
+|--------------------------------------|------------------------------------------------------------------|
+| `CREDIT_APP_NEW`                     | A buyer submits a new credit application.                        |
+| `CREDIT_LIMIT_CHANGE`                | A credit limit is modified for an existing customer.             |
+| `CREDIT_APP_STATUS_CHANGE`           | An application's review status changes (approval, rejection, …). |
+| `CUSTOMER_APP_SIGNATURE_REQUESTED`   | A signature is requested on a customer application.              |
+| `MANUAL`                             | A webhook is manually triggered (testing or special cases).      |
+
+## Request Format
+
+- **Method**: POST
+- **Content-Type**: application/json
+- **Timeout**: 10 seconds (your endpoint must respond within this time)
+- **Schema version**: `0.0.3` (latest is `0.0.9`; check `webhookVersion` in the payload)
+
+**reviewStatus values**: `INCOMPLETE_APPLICATION`, `ACTIVE_ACCOUNT`, `PLACEHOLDER_APPLICATION`, `INCOMPLETE_ACCOUNT`, `APPLICATION`, `PLACEHOLDER_ACCOUNT`, `REMOVED_ACCOUNT`, `REVIEW_ACCOUNT`, `REJECTED_APPLICATION`
+
+**Business type values**: `SOLE_PROPRIETORSHIP`, `PARTNERSHIP`, `LLC`, `COOPERATIVE`, `C_CORP`, `S_CORP`, `NON_PROFIT_ORGANIZATION`, `PUBLIC_AGENCY`
+
+## Authentication & Security
+
+Every webhook includes cryptographic signatures to verify authenticity:
+
+**Headers:**
+
+- `X-NUVO-CERT-URL`: https://www.nuvo.com/assets/webhook_public_key.pub
+- `X-NUVO-SIGNATURE`: Base64-encoded ECDSA signature
+
+**Algorithm Details:**
+
+- Signature: ECDSA with curve secp384r1 (NIST P-384)
+- Hash: SHA-256 of the JSON payload
+- Encoding: ASN.1 DER format, Base64 encoded
+
+A Node.js verification example is included as a code sample on every event below.
+
+## Error Handling & Retry Logic
+
+- **Maximum attempts**: 10 retries over ~13 hours
+- **Backoff strategy**: Exponential backoff (90 seconds base, doubles each retry)
+- **Retry triggers**: Any non-200 HTTP status, network failures, timeouts
+- **Idempotency**: Use `eventUuid` to detect and skip duplicate events
+
+After maximum retries, the webhook is marked as failed but your webhook remains active for future events.
+
+## Monitoring & Troubleshooting
+
+Once webhooks are enabled, you'll have access to a **Webhook Logs** tab in your Nuvo customer profile showing:
+
+- **All webhook deliveries** with timestamps and status
+- **Complete payloads** sent to your endpoint
+- **Your endpoint responses** (status codes, headers, response body)
+- **Retry attempts** and failure details
+
+### Common Issues
+
+1. **Webhooks not arriving**: Check your endpoint URL and firewall settings
+2. **Timeouts**: Ensure your endpoint responds within 10 seconds
+3. **Signature failures**: Verify you're using the correct public key and algorithm
+4. **Duplicate processing**: Use `eventUuid` for deduplication
+
+## Development & Testing
+
+- **Use Nuvo's testing portal** (under Settings → Integrations)
+- **Custom fields**: Two sections contain configurable fields that affect payload structure:
+    - `additionalFieldResponses`: Custom credit application questions and responses
+    - `internalFieldsValues`: Internal fields configured between supplier and Nuvo

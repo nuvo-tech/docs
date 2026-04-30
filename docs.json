@@ -33,7 +33,7 @@
             "groups": [
               {
                 "group": "Get Started",
-                "pages": ["webhook-reference/introduction"]
+                "pages": ["webhook-reference/v0_0_9/introduction"]
               }
             ],
             "openapi": {
@@ -46,7 +46,7 @@
             "groups": [
               {
                 "group": "Get Started",
-                "pages": ["webhook-reference/introduction"]
+                "pages": ["webhook-reference/v0_0_8/introduction"]
               }
             ],
             "openapi": {
@@ -59,7 +59,7 @@
             "groups": [
               {
                 "group": "Get Started",
-                "pages": ["webhook-reference/introduction"]
+                "pages": ["webhook-reference/v0_0_7/introduction"]
               }
             ],
             "openapi": {
@@ -72,7 +72,7 @@
             "groups": [
               {
                 "group": "Get Started",
-                "pages": ["webhook-reference/introduction"]
+                "pages": ["webhook-reference/v0_0_6/introduction"]
               }
             ],
             "openapi": {
@@ -85,7 +85,7 @@
             "groups": [
               {
                 "group": "Get Started",
-                "pages": ["webhook-reference/introduction"]
+                "pages": ["webhook-reference/v0_0_5/introduction"]
               }
             ],
             "openapi": {
@@ -98,7 +98,7 @@
             "groups": [
               {
                 "group": "Get Started",
-                "pages": ["webhook-reference/introduction"]
+                "pages": ["webhook-reference/v0_0_4/introduction"]
               }
             ],
             "openapi": {
@@ -111,7 +111,7 @@
             "groups": [
               {
                 "group": "Get Started",
-                "pages": ["webhook-reference/introduction"]
+                "pages": ["webhook-reference/v0_0_3/introduction"]
               }
             ],
             "openapi": {
@@ -124,7 +124,7 @@
             "groups": [
               {
                 "group": "Get Started",
-                "pages": ["webhook-reference/introduction"]
+                "pages": ["webhook-reference/v0_0_2/introduction"]
               }
             ],
             "openapi": {
@@ -137,7 +137,7 @@
             "groups": [
               {
                 "group": "Get Started",
-                "pages": ["webhook-reference/introduction"]
+                "pages": ["webhook-reference/v0_0_1/introduction"]
               }
             ],
             "openapi": {
