@@ -1,22 +1,349 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Nuvo Documentation",
+  "name": "Nuvo API Documentation",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#000000",
+    "light": "#FFFFFF",
+    "dark": "#000000"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/favicon.png",
   "navigation": {
-    "tabs": [
+    "versions": [
       {
-        "tab": "API Reference",
-        "openapi": "api_openapi.json"
+        "version": "v0.0.9",
+        "default": true,
+        "tag": "Latest",
+        "tabs": [
+          {
+            "tab": "API Reference",
+            "openapi": "api_openapi.json",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "api-reference/introduction"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Webhook Reference",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "webhook-reference/introduction"
+                ]
+              }
+            ],
+            "api": {
+              "playground": {
+                "display": "none"
+              }
+            },
+            "openapi": {
+              "source": "api_webhook_openapi_v0_0_9.json",
+              "directory": "webhooks/v0.0.9"
+            }
+          }
+        ]
       },
       {
-        "tab": "Webhook Reference",
-        "openapi": "api_webhook_openapi.json"
+        "version": "v0.0.8",
+        "tabs": [
+          {
+            "tab": "API Reference",
+            "openapi": "api_openapi.json",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "api-reference/introduction"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Webhook Reference",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "webhook-reference/introduction"
+                ]
+              }
+            ],
+            "api": {
+              "playground": {
+                "display": "none"
+              }
+            },
+            "openapi": {
+              "source": "api_webhook_openapi_v0_0_8.json",
+              "directory": "webhooks/v0.0.8"
+            }
+          }
+        ]
+      },
+      {
+        "version": "v0.0.7",
+        "tabs": [
+          {
+            "tab": "API Reference",
+            "openapi": "api_openapi.json",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "api-reference/introduction"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Webhook Reference",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "webhook-reference/introduction"
+                ]
+              }
+            ],
+            "api": {
+              "playground": {
+                "display": "none"
+              }
+            },
+            "openapi": {
+              "source": "api_webhook_openapi_v0_0_7.json",
+              "directory": "webhooks/v0.0.7"
+            }
+          }
+        ]
+      },
+      {
+        "version": "v0.0.6",
+        "tabs": [
+          {
+            "tab": "API Reference",
+            "openapi": "api_openapi.json",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "api-reference/introduction"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Webhook Reference",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "webhook-reference/introduction"
+                ]
+              }
+            ],
+            "api": {
+              "playground": {
+                "display": "none"
+              }
+            },
+            "openapi": {
+              "source": "api_webhook_openapi_v0_0_6.json",
+              "directory": "webhooks/v0.0.6"
+            }
+          }
+        ]
+      },
+      {
+        "version": "v0.0.5",
+        "tabs": [
+          {
+            "tab": "API Reference",
+            "openapi": "api_openapi.json",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "api-reference/introduction"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Webhook Reference",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "webhook-reference/introduction"
+                ]
+              }
+            ],
+            "api": {
+              "playground": {
+                "display": "none"
+              }
+            },
+            "openapi": {
+              "source": "api_webhook_openapi_v0_0_5.json",
+              "directory": "webhooks/v0.0.5"
+            }
+          }
+        ]
+      },
+      {
+        "version": "v0.0.4",
+        "tabs": [
+          {
+            "tab": "API Reference",
+            "openapi": "api_openapi.json",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "api-reference/introduction"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Webhook Reference",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "webhook-reference/introduction"
+                ]
+              }
+            ],
+            "api": {
+              "playground": {
+                "display": "none"
+              }
+            },
+            "openapi": {
+              "source": "api_webhook_openapi_v0_0_4.json",
+              "directory": "webhooks/v0.0.4"
+            }
+          }
+        ]
+      },
+      {
+        "version": "v0.0.3",
+        "tabs": [
+          {
+            "tab": "API Reference",
+            "openapi": "api_openapi.json",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "api-reference/introduction"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Webhook Reference",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "webhook-reference/introduction"
+                ]
+              }
+            ],
+            "api": {
+              "playground": {
+                "display": "none"
+              }
+            },
+            "openapi": {
+              "source": "api_webhook_openapi_v0_0_3.json",
+              "directory": "webhooks/v0.0.3"
+            }
+          }
+        ]
+      },
+      {
+        "version": "v0.0.2",
+        "tabs": [
+          {
+            "tab": "API Reference",
+            "openapi": "api_openapi.json",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "api-reference/introduction"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Webhook Reference",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "webhook-reference/introduction"
+                ]
+              }
+            ],
+            "api": {
+              "playground": {
+                "display": "none"
+              }
+            },
+            "openapi": {
+              "source": "api_webhook_openapi_v0_0_2.json",
+              "directory": "webhooks/v0.0.2"
+            }
+          }
+        ]
+      },
+      {
+        "version": "v0.0.1",
+        "tabs": [
+          {
+            "tab": "API Reference",
+            "openapi": "api_openapi.json",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "api-reference/introduction"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Webhook Reference",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": [
+                  "webhook-reference/introduction"
+                ]
+              }
+            ],
+            "api": {
+              "playground": {
+                "display": "none"
+              }
+            },
+            "openapi": {
+              "source": "api_webhook_openapi_v0_0_1.json",
+              "directory": "webhooks/v0.0.1"
+            }
+          }
+        ]
       }
     ]
   },
@@ -28,14 +355,9 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "mailto:support@nuvo.com"
       }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
+    ]
   },
   "contextual": {
     "options": [

@@ -1,0 +1,2048 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Nuvo Webhooks v0.0.9 (current)",
+    "description": "# Overview\n\nNuvo emits HTTP POST webhook events to customer-configured endpoints when specific events occur in the credit application system. This enables real-time event-driven integrations without polling.\n\n## Webhook Event Types\n\nNuvo supports the following webhook event types:\n\n1. **`CREDIT_APP_NEW`** - A new credit application has been submitted\n2. **`CREDIT_LIMIT_CHANGE`** - Credit limit has been modified for an existing customer\n3. **`CREDIT_APP_STATUS_CHANGE`** - Application status has changed (approval, rejection, etc.)\n4. **`CUSTOMER_APP_SIGNATURE_REQUESTED`** - A signature has been requested on a customer application\n5. **`MANUAL`** - Manually triggered webhook (used for testing and special cases)\n\n## Request Format\n\n- **Method**: POST\n- **Content-Type**: application/json\n- **Timeout**: 10 seconds (your endpoint must respond within this time)\n- **Current version**: `0.0.9` (check `webhookVersion` in the payload)\n\n**reviewStatus values**: `INCOMPLETE_APPLICATION`, `ACTIVE_ACCOUNT`, `PLACEHOLDER_APPLICATION`, `INCOMPLETE_ACCOUNT`, `APPLICATION`, `PLACEHOLDER_ACCOUNT`, `REMOVED_ACCOUNT`, `REVIEW_ACCOUNT`, `REJECTED_APPLICATION`\n\n**Business type values**: `SOLE_PROPRIETORSHIP`, `PARTNERSHIP`, `LLC`, `COOPERATIVE`, `C_CORP`, `S_CORP`, `NON_PROFIT_ORGANIZATION`, `PUBLIC_AGENCY`\n\n## Authentication & Security\n\nEvery webhook includes cryptographic signatures to verify authenticity:\n\n**Headers:**\n\n- `X-NUVO-CERT-URL`: https://www.nuvo.com/assets/webhook_public_key.pub\n- `X-NUVO-SIGNATURE`: Base64-encoded ECDSA signature\n\n**Algorithm Details:**\n\n- Signature: ECDSA with curve secp384r1 (NIST P-384)\n- Hash: SHA-256 of the JSON payload\n- Encoding: ASN.1 DER format, Base64 encoded\n\nA Node.js verification example is included as a code sample on every event below.\n\n## Error Handling & Retry Logic\n\n- **Maximum attempts**: 10 retries over ~13 hours\n- **Backoff strategy**: Exponential backoff (90 seconds base, doubles each retry)\n- **Retry triggers**: Any non-200 HTTP status, network failures, timeouts\n- **Idempotency**: Use `eventUuid` to detect and skip duplicate events\n\nAfter maximum retries, the webhook is marked as failed but your webhook remains active for future events.\n\n## Monitoring & Troubleshooting\n\nOnce webhooks are enabled, you'll have access to a **Webhook Logs** tab in your Nuvo customer profile showing:\n\n- **All webhook deliveries** with timestamps and status\n- **Complete payloads** sent to your endpoint\n- **Your endpoint responses** (status codes, headers, response body)\n- **Retry attempts** and failure details\n\n### Common Issues\n\n1. **Webhooks not arriving**: Check your endpoint URL and firewall settings\n2. **Timeouts**: Ensure your endpoint responds within 10 seconds\n3. **Signature failures**: Verify you're using the correct public key and algorithm\n4. **Duplicate processing**: Use `eventUuid` for deduplication\n\n## Development & Testing\n\n- **Use Nuvo's testing portal** (under Settings \u2192 Integrations)\n- **Custom fields**: Two sections contain configurable fields that affect payload structure:\n    - `additionalFieldResponses`: Custom credit application questions and responses\n    - `internalFieldsValues`: Internal fields configured between supplier and Nuvo",
+    "version": "0.0.9",
+    "license": {
+      "name": "Proprietary"
+    }
+  },
+  "paths": {
+    "/credit-app-new": {
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Credit App New",
+        "description": "Sent when a new credit application is submitted by a buyer.\n\nThe payload contains the full buyer + creditApplication snapshot at\nsubmission time. Use `eventUuid` to deduplicate retries.",
+        "operationId": "credit_app_new_credit_app_new_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditAppNewPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "json",
+            "label": "Example payload",
+            "source": "{\n  \"eventType\": \"CREDIT_APP_NEW\",\n  \"webhookVersion\": \"0.0.9\",\n  \"eventUuid\": \"13c272c3-ee0b-4a0a-bcf0-41ef9d8cbe89\",\n  \"timestamp\": \"2026-01-15T14:30:00Z\",\n  \"metadata\": {\n    \"referenceId\": \"customer_ref_123\"\n  },\n  \"buyer\": {\n    \"buyerId\": \"buyer_03490394857\",\n    \"legalName\": \"Acme Corporation Inc.\",\n    \"dba\": \"Acme Corp\",\n    \"taxId\": \"12-3456789\",\n    \"isVerified\": true,\n    \"billingAddress\": {\n      \"street\": \"123 Main Street\",\n      \"street2\": \"Suite 100\",\n      \"city\": \"New York\",\n      \"state\": \"NY\",\n      \"zipCode\": \"10001\",\n      \"county\": \"New York\",\n      \"country\": \"US\",\n      \"uspsValidated\": true,\n      \"addressType\": \"BUSINESS\"\n    },\n    \"accountsPayableEmailAddress\": \"ap@acme.com\",\n    \"accountsPayablePhoneNumber\": \"(555) 123-4567\",\n    \"statementsInvoicesEmail\": \"billing@acme.com\",\n    \"stateOfIncorporation\": \"DE\",\n    \"businessType\": \"C_CORP\",\n    \"poRequired\": false,\n    \"internalId\": \"ACME_001\",\n    \"ownersOfficersSignatories\": [\n      {\n        \"firstName\": \"John\",\n        \"lastName\": \"Smith\",\n        \"jobTitle\": \"CEO\",\n        \"emailAddress\": \"john@acme.com\",\n        \"phoneNumber\": \"(555) 123-4567\",\n        \"isVerified\": true\n      }\n    ],\n    \"secretaryOfState\": {\n      \"registeredNames\": [\n        \"Acme Corporation Inc.\",\n        \"Acme Corp\"\n      ]\n    }\n  },\n  \"creditApplication\": {\n    \"id\": \"credit_application_ABC123\",\n    \"reviewStatus\": \"APPLICATION\",\n    \"nextReviewDate\": \"2026-02-15\",\n    \"flow\": \"standard\",\n    \"applicantInformation\": {\n      \"name\": \"John Smith\",\n      \"firstName\": \"John\",\n      \"lastName\": \"Smith\",\n      \"title\": \"CEO\",\n      \"email\": \"john@acme.com\"\n    },\n    \"defaultCreditLimit\": 50000.0,\n    \"creditLimitCurrency\": \"USD\",\n    \"defaultCreditTerms\": \"NET 30\",\n    \"taxDocumentLinks\": [\n      \"https://nuvo.com/secure-document/xyz789\"\n    ],\n    \"dashboardUrl\": \"https://www.nuvo.com/customers/credit-app/ABC123\",\n    \"additionalFieldResponses\": {\n      \"annual_revenue\": \"5000000\",\n      \"years_in_business\": \"10\"\n    },\n    \"internalFieldsValues\": {\n      \"someSectionKey1\": {\n        \"account_manager\": \"Jane Doe\",\n        \"priority\": \"high\",\n        \"territory\": \"West Coast\"\n      }\n    },\n    \"businessLocations\": [\n      {\n        \"street\": \"456 Factory Road\",\n        \"street2\": \"\",\n        \"city\": \"Buffalo\",\n        \"state\": \"NY\",\n        \"zipCode\": \"14201\",\n        \"county\": \"Erie\",\n        \"country\": \"US\",\n        \"uspsValidated\": true,\n        \"addressType\": \"BUSINESS\"\n      }\n    ],\n    \"salesRepresentatives\": [\n      {\n        \"name\": \"Sarah Johnson\",\n        \"email\": \"sarah@yourcompany.com\",\n        \"phone\": \"(555) 987-6543\",\n        \"title\": \"Account Manager\"\n      }\n    ],\n    \"notes\": [\n      {\n        \"createdAt\": \"2026-01-15T10:30:00Z\",\n        \"message\": \"Customer prefers email communication\",\n        \"isSystemNote\": false,\n        \"assets\": []\n      }\n    ],\n    \"signatures\": [\n      {\n        \"kind\": \"T&C\",\n        \"name\": \"John Smith\",\n        \"email\": \"john@acme.com\",\n        \"title\": \"CEO\"\n      },\n      {\n        \"kind\": \"CUSTOM\",\n        \"name\": \"John Smith\",\n        \"email\": \"john@acme.com\",\n        \"title\": \"CEO\",\n        \"customSignatureKey\": \"shippingReleaseForm\"\n      }\n    ]\n  }\n}"
+          }
+        ]
+      }
+    },
+    "/credit-limit-change": {
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Credit Limit Change",
+        "description": "Sent when a credit limit is modified for an existing customer.\n\n`creditApplication.defaultCreditLimit` reflects the new limit.",
+        "operationId": "credit_limit_change_credit_limit_change_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditLimitChangePayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "json",
+            "label": "Example payload",
+            "source": "{\n  \"eventType\": \"CREDIT_LIMIT_CHANGE\",\n  \"webhookVersion\": \"0.0.9\",\n  \"eventUuid\": \"13c272c3-ee0b-4a0a-bcf0-41ef9d8cbe89\",\n  \"timestamp\": \"2026-01-15T14:30:00Z\",\n  \"metadata\": {\n    \"referenceId\": \"customer_ref_123\"\n  },\n  \"buyer\": {\n    \"buyerId\": \"buyer_03490394857\",\n    \"legalName\": \"Acme Corporation Inc.\",\n    \"dba\": \"Acme Corp\",\n    \"taxId\": \"12-3456789\",\n    \"isVerified\": true,\n    \"billingAddress\": {\n      \"street\": \"123 Main Street\",\n      \"street2\": \"Suite 100\",\n      \"city\": \"New York\",\n      \"state\": \"NY\",\n      \"zipCode\": \"10001\",\n      \"county\": \"New York\",\n      \"country\": \"US\",\n      \"uspsValidated\": true,\n      \"addressType\": \"BUSINESS\"\n    },\n    \"accountsPayableEmailAddress\": \"ap@acme.com\",\n    \"accountsPayablePhoneNumber\": \"(555) 123-4567\",\n    \"statementsInvoicesEmail\": \"billing@acme.com\",\n    \"stateOfIncorporation\": \"DE\",\n    \"businessType\": \"C_CORP\",\n    \"poRequired\": false,\n    \"internalId\": \"ACME_001\",\n    \"ownersOfficersSignatories\": [\n      {\n        \"firstName\": \"John\",\n        \"lastName\": \"Smith\",\n        \"jobTitle\": \"CEO\",\n        \"emailAddress\": \"john@acme.com\",\n        \"phoneNumber\": \"(555) 123-4567\",\n        \"isVerified\": true\n      }\n    ],\n    \"secretaryOfState\": {\n      \"registeredNames\": [\n        \"Acme Corporation Inc.\",\n        \"Acme Corp\"\n      ]\n    }\n  },\n  \"creditApplication\": {\n    \"id\": \"credit_application_ABC123\",\n    \"reviewStatus\": \"APPLICATION\",\n    \"nextReviewDate\": \"2026-02-15\",\n    \"flow\": \"standard\",\n    \"applicantInformation\": {\n      \"name\": \"John Smith\",\n      \"firstName\": \"John\",\n      \"lastName\": \"Smith\",\n      \"title\": \"CEO\",\n      \"email\": \"john@acme.com\"\n    },\n    \"defaultCreditLimit\": 50000.0,\n    \"creditLimitCurrency\": \"USD\",\n    \"defaultCreditTerms\": \"NET 30\",\n    \"taxDocumentLinks\": [\n      \"https://nuvo.com/secure-document/xyz789\"\n    ],\n    \"dashboardUrl\": \"https://www.nuvo.com/customers/credit-app/ABC123\",\n    \"additionalFieldResponses\": {\n      \"annual_revenue\": \"5000000\",\n      \"years_in_business\": \"10\"\n    },\n    \"internalFieldsValues\": {\n      \"someSectionKey1\": {\n        \"account_manager\": \"Jane Doe\",\n        \"priority\": \"high\",\n        \"territory\": \"West Coast\"\n      }\n    },\n    \"businessLocations\": [\n      {\n        \"street\": \"456 Factory Road\",\n        \"street2\": \"\",\n        \"city\": \"Buffalo\",\n        \"state\": \"NY\",\n        \"zipCode\": \"14201\",\n        \"county\": \"Erie\",\n        \"country\": \"US\",\n        \"uspsValidated\": true,\n        \"addressType\": \"BUSINESS\"\n      }\n    ],\n    \"salesRepresentatives\": [\n      {\n        \"name\": \"Sarah Johnson\",\n        \"email\": \"sarah@yourcompany.com\",\n        \"phone\": \"(555) 987-6543\",\n        \"title\": \"Account Manager\"\n      }\n    ],\n    \"notes\": [\n      {\n        \"createdAt\": \"2026-01-15T10:30:00Z\",\n        \"message\": \"Customer prefers email communication\",\n        \"isSystemNote\": false,\n        \"assets\": []\n      }\n    ],\n    \"signatures\": [\n      {\n        \"kind\": \"T&C\",\n        \"name\": \"John Smith\",\n        \"email\": \"john@acme.com\",\n        \"title\": \"CEO\"\n      },\n      {\n        \"kind\": \"CUSTOM\",\n        \"name\": \"John Smith\",\n        \"email\": \"john@acme.com\",\n        \"title\": \"CEO\",\n        \"customSignatureKey\": \"shippingReleaseForm\"\n      }\n    ]\n  }\n}"
+          }
+        ]
+      }
+    },
+    "/credit-app-status-change": {
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Credit App Status Change",
+        "description": "Sent when an application's review status changes (approval, rejection, etc.).\n\nThe new status is in `creditApplication.reviewStatus`.",
+        "operationId": "credit_app_status_change_credit_app_status_change_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditAppStatusChangePayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "json",
+            "label": "Example payload",
+            "source": "{\n  \"eventType\": \"CREDIT_APP_STATUS_CHANGE\",\n  \"webhookVersion\": \"0.0.9\",\n  \"eventUuid\": \"13c272c3-ee0b-4a0a-bcf0-41ef9d8cbe89\",\n  \"timestamp\": \"2026-01-15T14:30:00Z\",\n  \"metadata\": {\n    \"referenceId\": \"customer_ref_123\"\n  },\n  \"buyer\": {\n    \"buyerId\": \"buyer_03490394857\",\n    \"legalName\": \"Acme Corporation Inc.\",\n    \"dba\": \"Acme Corp\",\n    \"taxId\": \"12-3456789\",\n    \"isVerified\": true,\n    \"billingAddress\": {\n      \"street\": \"123 Main Street\",\n      \"street2\": \"Suite 100\",\n      \"city\": \"New York\",\n      \"state\": \"NY\",\n      \"zipCode\": \"10001\",\n      \"county\": \"New York\",\n      \"country\": \"US\",\n      \"uspsValidated\": true,\n      \"addressType\": \"BUSINESS\"\n    },\n    \"accountsPayableEmailAddress\": \"ap@acme.com\",\n    \"accountsPayablePhoneNumber\": \"(555) 123-4567\",\n    \"statementsInvoicesEmail\": \"billing@acme.com\",\n    \"stateOfIncorporation\": \"DE\",\n    \"businessType\": \"C_CORP\",\n    \"poRequired\": false,\n    \"internalId\": \"ACME_001\",\n    \"ownersOfficersSignatories\": [\n      {\n        \"firstName\": \"John\",\n        \"lastName\": \"Smith\",\n        \"jobTitle\": \"CEO\",\n        \"emailAddress\": \"john@acme.com\",\n        \"phoneNumber\": \"(555) 123-4567\",\n        \"isVerified\": true\n      }\n    ],\n    \"secretaryOfState\": {\n      \"registeredNames\": [\n        \"Acme Corporation Inc.\",\n        \"Acme Corp\"\n      ]\n    }\n  },\n  \"creditApplication\": {\n    \"id\": \"credit_application_ABC123\",\n    \"reviewStatus\": \"APPLICATION\",\n    \"nextReviewDate\": \"2026-02-15\",\n    \"flow\": \"standard\",\n    \"applicantInformation\": {\n      \"name\": \"John Smith\",\n      \"firstName\": \"John\",\n      \"lastName\": \"Smith\",\n      \"title\": \"CEO\",\n      \"email\": \"john@acme.com\"\n    },\n    \"defaultCreditLimit\": 50000.0,\n    \"creditLimitCurrency\": \"USD\",\n    \"defaultCreditTerms\": \"NET 30\",\n    \"taxDocumentLinks\": [\n      \"https://nuvo.com/secure-document/xyz789\"\n    ],\n    \"dashboardUrl\": \"https://www.nuvo.com/customers/credit-app/ABC123\",\n    \"additionalFieldResponses\": {\n      \"annual_revenue\": \"5000000\",\n      \"years_in_business\": \"10\"\n    },\n    \"internalFieldsValues\": {\n      \"someSectionKey1\": {\n        \"account_manager\": \"Jane Doe\",\n        \"priority\": \"high\",\n        \"territory\": \"West Coast\"\n      }\n    },\n    \"businessLocations\": [\n      {\n        \"street\": \"456 Factory Road\",\n        \"street2\": \"\",\n        \"city\": \"Buffalo\",\n        \"state\": \"NY\",\n        \"zipCode\": \"14201\",\n        \"county\": \"Erie\",\n        \"country\": \"US\",\n        \"uspsValidated\": true,\n        \"addressType\": \"BUSINESS\"\n      }\n    ],\n    \"salesRepresentatives\": [\n      {\n        \"name\": \"Sarah Johnson\",\n        \"email\": \"sarah@yourcompany.com\",\n        \"phone\": \"(555) 987-6543\",\n        \"title\": \"Account Manager\"\n      }\n    ],\n    \"notes\": [\n      {\n        \"createdAt\": \"2026-01-15T10:30:00Z\",\n        \"message\": \"Customer prefers email communication\",\n        \"isSystemNote\": false,\n        \"assets\": []\n      }\n    ],\n    \"signatures\": [\n      {\n        \"kind\": \"T&C\",\n        \"name\": \"John Smith\",\n        \"email\": \"john@acme.com\",\n        \"title\": \"CEO\"\n      },\n      {\n        \"kind\": \"CUSTOM\",\n        \"name\": \"John Smith\",\n        \"email\": \"john@acme.com\",\n        \"title\": \"CEO\",\n        \"customSignatureKey\": \"shippingReleaseForm\"\n      }\n    ]\n  }\n}"
+          }
+        ]
+      }
+    },
+    "/customer-app-signature-requested": {
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Customer App Signature Requested",
+        "description": "Sent when a signature is requested on a customer application.",
+        "operationId": "customer_app_signature_requested_customer_app_signature_requested_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerAppSignatureRequestedPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "json",
+            "label": "Example payload",
+            "source": "{\n  \"eventType\": \"CUSTOMER_APP_SIGNATURE_REQUESTED\",\n  \"webhookVersion\": \"0.0.9\",\n  \"eventUuid\": \"13c272c3-ee0b-4a0a-bcf0-41ef9d8cbe89\",\n  \"timestamp\": \"2026-01-15T14:30:00Z\",\n  \"metadata\": {\n    \"referenceId\": \"customer_ref_123\"\n  },\n  \"buyer\": {\n    \"buyerId\": \"buyer_03490394857\",\n    \"legalName\": \"Acme Corporation Inc.\",\n    \"dba\": \"Acme Corp\",\n    \"taxId\": \"12-3456789\",\n    \"isVerified\": true,\n    \"billingAddress\": {\n      \"street\": \"123 Main Street\",\n      \"street2\": \"Suite 100\",\n      \"city\": \"New York\",\n      \"state\": \"NY\",\n      \"zipCode\": \"10001\",\n      \"county\": \"New York\",\n      \"country\": \"US\",\n      \"uspsValidated\": true,\n      \"addressType\": \"BUSINESS\"\n    },\n    \"accountsPayableEmailAddress\": \"ap@acme.com\",\n    \"accountsPayablePhoneNumber\": \"(555) 123-4567\",\n    \"statementsInvoicesEmail\": \"billing@acme.com\",\n    \"stateOfIncorporation\": \"DE\",\n    \"businessType\": \"C_CORP\",\n    \"poRequired\": false,\n    \"internalId\": \"ACME_001\",\n    \"ownersOfficersSignatories\": [\n      {\n        \"firstName\": \"John\",\n        \"lastName\": \"Smith\",\n        \"jobTitle\": \"CEO\",\n        \"emailAddress\": \"john@acme.com\",\n        \"phoneNumber\": \"(555) 123-4567\",\n        \"isVerified\": true\n      }\n    ],\n    \"secretaryOfState\": {\n      \"registeredNames\": [\n        \"Acme Corporation Inc.\",\n        \"Acme Corp\"\n      ]\n    }\n  },\n  \"creditApplication\": {\n    \"id\": \"credit_application_ABC123\",\n    \"reviewStatus\": \"APPLICATION\",\n    \"nextReviewDate\": \"2026-02-15\",\n    \"flow\": \"standard\",\n    \"applicantInformation\": {\n      \"name\": \"John Smith\",\n      \"firstName\": \"John\",\n      \"lastName\": \"Smith\",\n      \"title\": \"CEO\",\n      \"email\": \"john@acme.com\"\n    },\n    \"defaultCreditLimit\": 50000.0,\n    \"creditLimitCurrency\": \"USD\",\n    \"defaultCreditTerms\": \"NET 30\",\n    \"taxDocumentLinks\": [\n      \"https://nuvo.com/secure-document/xyz789\"\n    ],\n    \"dashboardUrl\": \"https://www.nuvo.com/customers/credit-app/ABC123\",\n    \"additionalFieldResponses\": {\n      \"annual_revenue\": \"5000000\",\n      \"years_in_business\": \"10\"\n    },\n    \"internalFieldsValues\": {\n      \"someSectionKey1\": {\n        \"account_manager\": \"Jane Doe\",\n        \"priority\": \"high\",\n        \"territory\": \"West Coast\"\n      }\n    },\n    \"businessLocations\": [\n      {\n        \"street\": \"456 Factory Road\",\n        \"street2\": \"\",\n        \"city\": \"Buffalo\",\n        \"state\": \"NY\",\n        \"zipCode\": \"14201\",\n        \"county\": \"Erie\",\n        \"country\": \"US\",\n        \"uspsValidated\": true,\n        \"addressType\": \"BUSINESS\"\n      }\n    ],\n    \"salesRepresentatives\": [\n      {\n        \"name\": \"Sarah Johnson\",\n        \"email\": \"sarah@yourcompany.com\",\n        \"phone\": \"(555) 987-6543\",\n        \"title\": \"Account Manager\"\n      }\n    ],\n    \"notes\": [\n      {\n        \"createdAt\": \"2026-01-15T10:30:00Z\",\n        \"message\": \"Customer prefers email communication\",\n        \"isSystemNote\": false,\n        \"assets\": []\n      }\n    ],\n    \"signatures\": [\n      {\n        \"kind\": \"T&C\",\n        \"name\": \"John Smith\",\n        \"email\": \"john@acme.com\",\n        \"title\": \"CEO\"\n      },\n      {\n        \"kind\": \"CUSTOM\",\n        \"name\": \"John Smith\",\n        \"email\": \"john@acme.com\",\n        \"title\": \"CEO\",\n        \"customSignatureKey\": \"shippingReleaseForm\"\n      }\n    ]\n  }\n}"
+          }
+        ]
+      }
+    },
+    "/manual": {
+      "post": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Manual",
+        "description": "Sent when a webhook is manually triggered (testing or special cases).",
+        "operationId": "manual_manual_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-codeSamples": [
+          {
+            "lang": "json",
+            "label": "Example payload",
+            "source": "{\n  \"eventType\": \"MANUAL\",\n  \"webhookVersion\": \"0.0.9\",\n  \"eventUuid\": \"13c272c3-ee0b-4a0a-bcf0-41ef9d8cbe89\",\n  \"timestamp\": \"2026-01-15T14:30:00Z\",\n  \"metadata\": {\n    \"referenceId\": \"customer_ref_123\"\n  },\n  \"buyer\": {\n    \"buyerId\": \"buyer_03490394857\",\n    \"legalName\": \"Acme Corporation Inc.\",\n    \"dba\": \"Acme Corp\",\n    \"taxId\": \"12-3456789\",\n    \"isVerified\": true,\n    \"billingAddress\": {\n      \"street\": \"123 Main Street\",\n      \"street2\": \"Suite 100\",\n      \"city\": \"New York\",\n      \"state\": \"NY\",\n      \"zipCode\": \"10001\",\n      \"county\": \"New York\",\n      \"country\": \"US\",\n      \"uspsValidated\": true,\n      \"addressType\": \"BUSINESS\"\n    },\n    \"accountsPayableEmailAddress\": \"ap@acme.com\",\n    \"accountsPayablePhoneNumber\": \"(555) 123-4567\",\n    \"statementsInvoicesEmail\": \"billing@acme.com\",\n    \"stateOfIncorporation\": \"DE\",\n    \"businessType\": \"C_CORP\",\n    \"poRequired\": false,\n    \"internalId\": \"ACME_001\",\n    \"ownersOfficersSignatories\": [\n      {\n        \"firstName\": \"John\",\n        \"lastName\": \"Smith\",\n        \"jobTitle\": \"CEO\",\n        \"emailAddress\": \"john@acme.com\",\n        \"phoneNumber\": \"(555) 123-4567\",\n        \"isVerified\": true\n      }\n    ],\n    \"secretaryOfState\": {\n      \"registeredNames\": [\n        \"Acme Corporation Inc.\",\n        \"Acme Corp\"\n      ]\n    }\n  },\n  \"creditApplication\": {\n    \"id\": \"credit_application_ABC123\",\n    \"reviewStatus\": \"APPLICATION\",\n    \"nextReviewDate\": \"2026-02-15\",\n    \"flow\": \"standard\",\n    \"applicantInformation\": {\n      \"name\": \"John Smith\",\n      \"firstName\": \"John\",\n      \"lastName\": \"Smith\",\n      \"title\": \"CEO\",\n      \"email\": \"john@acme.com\"\n    },\n    \"defaultCreditLimit\": 50000.0,\n    \"creditLimitCurrency\": \"USD\",\n    \"defaultCreditTerms\": \"NET 30\",\n    \"taxDocumentLinks\": [\n      \"https://nuvo.com/secure-document/xyz789\"\n    ],\n    \"dashboardUrl\": \"https://www.nuvo.com/customers/credit-app/ABC123\",\n    \"additionalFieldResponses\": {\n      \"annual_revenue\": \"5000000\",\n      \"years_in_business\": \"10\"\n    },\n    \"internalFieldsValues\": {\n      \"someSectionKey1\": {\n        \"account_manager\": \"Jane Doe\",\n        \"priority\": \"high\",\n        \"territory\": \"West Coast\"\n      }\n    },\n    \"businessLocations\": [\n      {\n        \"street\": \"456 Factory Road\",\n        \"street2\": \"\",\n        \"city\": \"Buffalo\",\n        \"state\": \"NY\",\n        \"zipCode\": \"14201\",\n        \"county\": \"Erie\",\n        \"country\": \"US\",\n        \"uspsValidated\": true,\n        \"addressType\": \"BUSINESS\"\n      }\n    ],\n    \"salesRepresentatives\": [\n      {\n        \"name\": \"Sarah Johnson\",\n        \"email\": \"sarah@yourcompany.com\",\n        \"phone\": \"(555) 987-6543\",\n        \"title\": \"Account Manager\"\n      }\n    ],\n    \"notes\": [\n      {\n        \"createdAt\": \"2026-01-15T10:30:00Z\",\n        \"message\": \"Customer prefers email communication\",\n        \"isSystemNote\": false,\n        \"assets\": []\n      }\n    ],\n    \"signatures\": [\n      {\n        \"kind\": \"T&C\",\n        \"name\": \"John Smith\",\n        \"email\": \"john@acme.com\",\n        \"title\": \"CEO\"\n      },\n      {\n        \"kind\": \"CUSTOM\",\n        \"name\": \"John Smith\",\n        \"email\": \"john@acme.com\",\n        \"title\": \"CEO\",\n        \"customSignatureKey\": \"shippingReleaseForm\"\n      }\n    ]\n  }\n}"
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Country": {
+        "type": "string",
+        "enum": [
+          "AD",
+          "AE",
+          "AF",
+          "AG",
+          "AI",
+          "AL",
+          "AM",
+          "AO",
+          "AQ",
+          "AR",
+          "AS",
+          "AT",
+          "AU",
+          "AW",
+          "AX",
+          "AZ",
+          "BA",
+          "BB",
+          "BD",
+          "BE",
+          "BF",
+          "BG",
+          "BH",
+          "BI",
+          "BJ",
+          "BL",
+          "BM",
+          "BN",
+          "BO",
+          "BQ",
+          "BR",
+          "BS",
+          "BT",
+          "BV",
+          "BW",
+          "BY",
+          "BZ",
+          "CA",
+          "CC",
+          "CD",
+          "CF",
+          "CG",
+          "CH",
+          "CI",
+          "CK",
+          "CL",
+          "CM",
+          "CN",
+          "CO",
+          "CR",
+          "CU",
+          "CV",
+          "CW",
+          "CX",
+          "CY",
+          "CZ",
+          "DE",
+          "DJ",
+          "DK",
+          "DM",
+          "DO",
+          "DZ",
+          "EC",
+          "EE",
+          "EG",
+          "EH",
+          "ER",
+          "ES",
+          "ET",
+          "FI",
+          "FJ",
+          "FK",
+          "FM",
+          "FO",
+          "FR",
+          "GA",
+          "GB",
+          "GD",
+          "GE",
+          "GF",
+          "GG",
+          "GH",
+          "GI",
+          "GL",
+          "GM",
+          "GN",
+          "GP",
+          "GQ",
+          "GR",
+          "GS",
+          "GT",
+          "GU",
+          "GW",
+          "GY",
+          "HK",
+          "HM",
+          "HN",
+          "HR",
+          "HT",
+          "HU",
+          "ID",
+          "IE",
+          "IL",
+          "IM",
+          "IN",
+          "IO",
+          "IQ",
+          "IR",
+          "IS",
+          "IT",
+          "JE",
+          "JM",
+          "JO",
+          "JP",
+          "KE",
+          "KG",
+          "KH",
+          "KI",
+          "KM",
+          "KN",
+          "KP",
+          "KR",
+          "KW",
+          "KY",
+          "KZ",
+          "LA",
+          "LB",
+          "LC",
+          "LI",
+          "LK",
+          "LR",
+          "LS",
+          "LT",
+          "LU",
+          "LV",
+          "LY",
+          "MA",
+          "MC",
+          "MD",
+          "ME",
+          "MF",
+          "MG",
+          "MH",
+          "MK",
+          "ML",
+          "MM",
+          "MN",
+          "MO",
+          "MP",
+          "MQ",
+          "MR",
+          "MS",
+          "MT",
+          "MU",
+          "MV",
+          "MW",
+          "MX",
+          "MY",
+          "MZ",
+          "NA",
+          "NC",
+          "NE",
+          "NF",
+          "NG",
+          "NI",
+          "NL",
+          "NO",
+          "NP",
+          "NR",
+          "NU",
+          "NZ",
+          "OM",
+          "PA",
+          "PE",
+          "PF",
+          "PG",
+          "PH",
+          "PK",
+          "PL",
+          "PM",
+          "PN",
+          "PR",
+          "PS",
+          "PT",
+          "PW",
+          "PY",
+          "QA",
+          "RE",
+          "RO",
+          "RS",
+          "RU",
+          "RW",
+          "SA",
+          "SB",
+          "SC",
+          "SD",
+          "SE",
+          "SG",
+          "SH",
+          "SI",
+          "SJ",
+          "SK",
+          "SL",
+          "SM",
+          "SN",
+          "SO",
+          "SR",
+          "SS",
+          "ST",
+          "SV",
+          "SX",
+          "SY",
+          "SZ",
+          "TC",
+          "TD",
+          "TF",
+          "TG",
+          "TH",
+          "TJ",
+          "TK",
+          "TL",
+          "TM",
+          "TN",
+          "TO",
+          "TR",
+          "TT",
+          "TV",
+          "TW",
+          "TZ",
+          "UA",
+          "UG",
+          "UM",
+          "US",
+          "UY",
+          "UZ",
+          "VA",
+          "VC",
+          "VE",
+          "VG",
+          "VI",
+          "VN",
+          "VU",
+          "WF",
+          "WS",
+          "YE",
+          "YT",
+          "ZA",
+          "ZM",
+          "ZW",
+          "Other"
+        ],
+        "title": "Country",
+        "description": "An enumeration."
+      },
+      "CreditAppNewPayload": {
+        "properties": {
+          "webhookVersion": {
+            "type": "string",
+            "enum": [
+              "0.0.9"
+            ],
+            "title": "Webhookversion",
+            "description": "Payload schema version.",
+            "default": "0.0.9"
+          },
+          "eventUuid": {
+            "type": "string",
+            "title": "Eventuuid",
+            "description": "Unique id for this delivery. Use for idempotency."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp",
+            "description": "UTC timestamp the event was emitted."
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/WebhookMetadata"
+          },
+          "buyer": {
+            "$ref": "#/components/schemas/WebhookBuyer"
+          },
+          "creditApplication": {
+            "$ref": "#/components/schemas/WebhookCustomerApplication"
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "CREDIT_APP_NEW"
+            ],
+            "title": "Eventtype"
+          }
+        },
+        "type": "object",
+        "required": [
+          "webhookVersion",
+          "eventUuid",
+          "timestamp",
+          "metadata",
+          "creditApplication",
+          "eventType"
+        ],
+        "title": "CreditAppNewPayload",
+        "example": {
+          "eventType": "CREDIT_APP_NEW",
+          "webhookVersion": "0.0.9",
+          "eventUuid": "13c272c3-ee0b-4a0a-bcf0-41ef9d8cbe89",
+          "timestamp": "2026-01-15T14:30:00Z",
+          "metadata": {
+            "referenceId": "customer_ref_123"
+          },
+          "buyer": {
+            "buyerId": "buyer_03490394857",
+            "legalName": "Acme Corporation Inc.",
+            "dba": "Acme Corp",
+            "taxId": "12-3456789",
+            "isVerified": true,
+            "billingAddress": {
+              "street": "123 Main Street",
+              "street2": "Suite 100",
+              "city": "New York",
+              "state": "NY",
+              "zipCode": "10001",
+              "county": "New York",
+              "country": "US",
+              "uspsValidated": true,
+              "addressType": "BUSINESS"
+            },
+            "accountsPayableEmailAddress": "ap@acme.com",
+            "accountsPayablePhoneNumber": "(555) 123-4567",
+            "statementsInvoicesEmail": "billing@acme.com",
+            "stateOfIncorporation": "DE",
+            "businessType": "C_CORP",
+            "poRequired": false,
+            "internalId": "ACME_001",
+            "ownersOfficersSignatories": [
+              {
+                "firstName": "John",
+                "lastName": "Smith",
+                "jobTitle": "CEO",
+                "emailAddress": "john@acme.com",
+                "phoneNumber": "(555) 123-4567",
+                "isVerified": true
+              }
+            ],
+            "secretaryOfState": {
+              "registeredNames": [
+                "Acme Corporation Inc.",
+                "Acme Corp"
+              ]
+            }
+          },
+          "creditApplication": {
+            "id": "credit_application_ABC123",
+            "reviewStatus": "APPLICATION",
+            "nextReviewDate": "2026-02-15",
+            "flow": "standard",
+            "applicantInformation": {
+              "name": "John Smith",
+              "firstName": "John",
+              "lastName": "Smith",
+              "title": "CEO",
+              "email": "john@acme.com"
+            },
+            "defaultCreditLimit": 50000.0,
+            "creditLimitCurrency": "USD",
+            "defaultCreditTerms": "NET 30",
+            "taxDocumentLinks": [
+              "https://nuvo.com/secure-document/xyz789"
+            ],
+            "dashboardUrl": "https://www.nuvo.com/customers/credit-app/ABC123",
+            "additionalFieldResponses": {
+              "annual_revenue": "5000000",
+              "years_in_business": "10"
+            },
+            "internalFieldsValues": {
+              "someSectionKey1": {
+                "account_manager": "Jane Doe",
+                "priority": "high",
+                "territory": "West Coast"
+              }
+            },
+            "businessLocations": [
+              {
+                "street": "456 Factory Road",
+                "street2": "",
+                "city": "Buffalo",
+                "state": "NY",
+                "zipCode": "14201",
+                "county": "Erie",
+                "country": "US",
+                "uspsValidated": true,
+                "addressType": "BUSINESS"
+              }
+            ],
+            "salesRepresentatives": [
+              {
+                "name": "Sarah Johnson",
+                "email": "sarah@yourcompany.com",
+                "phone": "(555) 987-6543",
+                "title": "Account Manager"
+              }
+            ],
+            "notes": [
+              {
+                "createdAt": "2026-01-15T10:30:00Z",
+                "message": "Customer prefers email communication",
+                "isSystemNote": false,
+                "assets": []
+              }
+            ],
+            "signatures": [
+              {
+                "kind": "T&C",
+                "name": "John Smith",
+                "email": "john@acme.com",
+                "title": "CEO"
+              },
+              {
+                "kind": "CUSTOM",
+                "name": "John Smith",
+                "email": "john@acme.com",
+                "title": "CEO",
+                "customSignatureKey": "shippingReleaseForm"
+              }
+            ]
+          }
+        }
+      },
+      "CreditAppStatusChangePayload": {
+        "properties": {
+          "webhookVersion": {
+            "type": "string",
+            "enum": [
+              "0.0.9"
+            ],
+            "title": "Webhookversion",
+            "description": "Payload schema version.",
+            "default": "0.0.9"
+          },
+          "eventUuid": {
+            "type": "string",
+            "title": "Eventuuid",
+            "description": "Unique id for this delivery. Use for idempotency."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp",
+            "description": "UTC timestamp the event was emitted."
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/WebhookMetadata"
+          },
+          "buyer": {
+            "$ref": "#/components/schemas/WebhookBuyer"
+          },
+          "creditApplication": {
+            "$ref": "#/components/schemas/WebhookCustomerApplication"
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "CREDIT_APP_STATUS_CHANGE"
+            ],
+            "title": "Eventtype"
+          }
+        },
+        "type": "object",
+        "required": [
+          "webhookVersion",
+          "eventUuid",
+          "timestamp",
+          "metadata",
+          "creditApplication",
+          "eventType"
+        ],
+        "title": "CreditAppStatusChangePayload",
+        "example": {
+          "eventType": "CREDIT_APP_STATUS_CHANGE",
+          "webhookVersion": "0.0.9",
+          "eventUuid": "13c272c3-ee0b-4a0a-bcf0-41ef9d8cbe89",
+          "timestamp": "2026-01-15T14:30:00Z",
+          "metadata": {
+            "referenceId": "customer_ref_123"
+          },
+          "buyer": {
+            "buyerId": "buyer_03490394857",
+            "legalName": "Acme Corporation Inc.",
+            "dba": "Acme Corp",
+            "taxId": "12-3456789",
+            "isVerified": true,
+            "billingAddress": {
+              "street": "123 Main Street",
+              "street2": "Suite 100",
+              "city": "New York",
+              "state": "NY",
+              "zipCode": "10001",
+              "county": "New York",
+              "country": "US",
+              "uspsValidated": true,
+              "addressType": "BUSINESS"
+            },
+            "accountsPayableEmailAddress": "ap@acme.com",
+            "accountsPayablePhoneNumber": "(555) 123-4567",
+            "statementsInvoicesEmail": "billing@acme.com",
+            "stateOfIncorporation": "DE",
+            "businessType": "C_CORP",
+            "poRequired": false,
+            "internalId": "ACME_001",
+            "ownersOfficersSignatories": [
+              {
+                "firstName": "John",
+                "lastName": "Smith",
+                "jobTitle": "CEO",
+                "emailAddress": "john@acme.com",
+                "phoneNumber": "(555) 123-4567",
+                "isVerified": true
+              }
+            ],
+            "secretaryOfState": {
+              "registeredNames": [
+                "Acme Corporation Inc.",
+                "Acme Corp"
+              ]
+            }
+          },
+          "creditApplication": {
+            "id": "credit_application_ABC123",
+            "reviewStatus": "APPLICATION",
+            "nextReviewDate": "2026-02-15",
+            "flow": "standard",
+            "applicantInformation": {
+              "name": "John Smith",
+              "firstName": "John",
+              "lastName": "Smith",
+              "title": "CEO",
+              "email": "john@acme.com"
+            },
+            "defaultCreditLimit": 50000.0,
+            "creditLimitCurrency": "USD",
+            "defaultCreditTerms": "NET 30",
+            "taxDocumentLinks": [
+              "https://nuvo.com/secure-document/xyz789"
+            ],
+            "dashboardUrl": "https://www.nuvo.com/customers/credit-app/ABC123",
+            "additionalFieldResponses": {
+              "annual_revenue": "5000000",
+              "years_in_business": "10"
+            },
+            "internalFieldsValues": {
+              "someSectionKey1": {
+                "account_manager": "Jane Doe",
+                "priority": "high",
+                "territory": "West Coast"
+              }
+            },
+            "businessLocations": [
+              {
+                "street": "456 Factory Road",
+                "street2": "",
+                "city": "Buffalo",
+                "state": "NY",
+                "zipCode": "14201",
+                "county": "Erie",
+                "country": "US",
+                "uspsValidated": true,
+                "addressType": "BUSINESS"
+              }
+            ],
+            "salesRepresentatives": [
+              {
+                "name": "Sarah Johnson",
+                "email": "sarah@yourcompany.com",
+                "phone": "(555) 987-6543",
+                "title": "Account Manager"
+              }
+            ],
+            "notes": [
+              {
+                "createdAt": "2026-01-15T10:30:00Z",
+                "message": "Customer prefers email communication",
+                "isSystemNote": false,
+                "assets": []
+              }
+            ],
+            "signatures": [
+              {
+                "kind": "T&C",
+                "name": "John Smith",
+                "email": "john@acme.com",
+                "title": "CEO"
+              },
+              {
+                "kind": "CUSTOM",
+                "name": "John Smith",
+                "email": "john@acme.com",
+                "title": "CEO",
+                "customSignatureKey": "shippingReleaseForm"
+              }
+            ]
+          }
+        }
+      },
+      "CreditLimitChangePayload": {
+        "properties": {
+          "webhookVersion": {
+            "type": "string",
+            "enum": [
+              "0.0.9"
+            ],
+            "title": "Webhookversion",
+            "description": "Payload schema version.",
+            "default": "0.0.9"
+          },
+          "eventUuid": {
+            "type": "string",
+            "title": "Eventuuid",
+            "description": "Unique id for this delivery. Use for idempotency."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp",
+            "description": "UTC timestamp the event was emitted."
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/WebhookMetadata"
+          },
+          "buyer": {
+            "$ref": "#/components/schemas/WebhookBuyer"
+          },
+          "creditApplication": {
+            "$ref": "#/components/schemas/WebhookCustomerApplication"
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "CREDIT_LIMIT_CHANGE"
+            ],
+            "title": "Eventtype"
+          }
+        },
+        "type": "object",
+        "required": [
+          "webhookVersion",
+          "eventUuid",
+          "timestamp",
+          "metadata",
+          "creditApplication",
+          "eventType"
+        ],
+        "title": "CreditLimitChangePayload",
+        "example": {
+          "eventType": "CREDIT_LIMIT_CHANGE",
+          "webhookVersion": "0.0.9",
+          "eventUuid": "13c272c3-ee0b-4a0a-bcf0-41ef9d8cbe89",
+          "timestamp": "2026-01-15T14:30:00Z",
+          "metadata": {
+            "referenceId": "customer_ref_123"
+          },
+          "buyer": {
+            "buyerId": "buyer_03490394857",
+            "legalName": "Acme Corporation Inc.",
+            "dba": "Acme Corp",
+            "taxId": "12-3456789",
+            "isVerified": true,
+            "billingAddress": {
+              "street": "123 Main Street",
+              "street2": "Suite 100",
+              "city": "New York",
+              "state": "NY",
+              "zipCode": "10001",
+              "county": "New York",
+              "country": "US",
+              "uspsValidated": true,
+              "addressType": "BUSINESS"
+            },
+            "accountsPayableEmailAddress": "ap@acme.com",
+            "accountsPayablePhoneNumber": "(555) 123-4567",
+            "statementsInvoicesEmail": "billing@acme.com",
+            "stateOfIncorporation": "DE",
+            "businessType": "C_CORP",
+            "poRequired": false,
+            "internalId": "ACME_001",
+            "ownersOfficersSignatories": [
+              {
+                "firstName": "John",
+                "lastName": "Smith",
+                "jobTitle": "CEO",
+                "emailAddress": "john@acme.com",
+                "phoneNumber": "(555) 123-4567",
+                "isVerified": true
+              }
+            ],
+            "secretaryOfState": {
+              "registeredNames": [
+                "Acme Corporation Inc.",
+                "Acme Corp"
+              ]
+            }
+          },
+          "creditApplication": {
+            "id": "credit_application_ABC123",
+            "reviewStatus": "APPLICATION",
+            "nextReviewDate": "2026-02-15",
+            "flow": "standard",
+            "applicantInformation": {
+              "name": "John Smith",
+              "firstName": "John",
+              "lastName": "Smith",
+              "title": "CEO",
+              "email": "john@acme.com"
+            },
+            "defaultCreditLimit": 50000.0,
+            "creditLimitCurrency": "USD",
+            "defaultCreditTerms": "NET 30",
+            "taxDocumentLinks": [
+              "https://nuvo.com/secure-document/xyz789"
+            ],
+            "dashboardUrl": "https://www.nuvo.com/customers/credit-app/ABC123",
+            "additionalFieldResponses": {
+              "annual_revenue": "5000000",
+              "years_in_business": "10"
+            },
+            "internalFieldsValues": {
+              "someSectionKey1": {
+                "account_manager": "Jane Doe",
+                "priority": "high",
+                "territory": "West Coast"
+              }
+            },
+            "businessLocations": [
+              {
+                "street": "456 Factory Road",
+                "street2": "",
+                "city": "Buffalo",
+                "state": "NY",
+                "zipCode": "14201",
+                "county": "Erie",
+                "country": "US",
+                "uspsValidated": true,
+                "addressType": "BUSINESS"
+              }
+            ],
+            "salesRepresentatives": [
+              {
+                "name": "Sarah Johnson",
+                "email": "sarah@yourcompany.com",
+                "phone": "(555) 987-6543",
+                "title": "Account Manager"
+              }
+            ],
+            "notes": [
+              {
+                "createdAt": "2026-01-15T10:30:00Z",
+                "message": "Customer prefers email communication",
+                "isSystemNote": false,
+                "assets": []
+              }
+            ],
+            "signatures": [
+              {
+                "kind": "T&C",
+                "name": "John Smith",
+                "email": "john@acme.com",
+                "title": "CEO"
+              },
+              {
+                "kind": "CUSTOM",
+                "name": "John Smith",
+                "email": "john@acme.com",
+                "title": "CEO",
+                "customSignatureKey": "shippingReleaseForm"
+              }
+            ]
+          }
+        }
+      },
+      "CustomerAppSignatureRequestedPayload": {
+        "properties": {
+          "webhookVersion": {
+            "type": "string",
+            "enum": [
+              "0.0.9"
+            ],
+            "title": "Webhookversion",
+            "description": "Payload schema version.",
+            "default": "0.0.9"
+          },
+          "eventUuid": {
+            "type": "string",
+            "title": "Eventuuid",
+            "description": "Unique id for this delivery. Use for idempotency."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp",
+            "description": "UTC timestamp the event was emitted."
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/WebhookMetadata"
+          },
+          "buyer": {
+            "$ref": "#/components/schemas/WebhookBuyer"
+          },
+          "creditApplication": {
+            "$ref": "#/components/schemas/WebhookCustomerApplication"
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "CUSTOMER_APP_SIGNATURE_REQUESTED"
+            ],
+            "title": "Eventtype"
+          }
+        },
+        "type": "object",
+        "required": [
+          "webhookVersion",
+          "eventUuid",
+          "timestamp",
+          "metadata",
+          "creditApplication",
+          "eventType"
+        ],
+        "title": "CustomerAppSignatureRequestedPayload",
+        "example": {
+          "eventType": "CUSTOMER_APP_SIGNATURE_REQUESTED",
+          "webhookVersion": "0.0.9",
+          "eventUuid": "13c272c3-ee0b-4a0a-bcf0-41ef9d8cbe89",
+          "timestamp": "2026-01-15T14:30:00Z",
+          "metadata": {
+            "referenceId": "customer_ref_123"
+          },
+          "buyer": {
+            "buyerId": "buyer_03490394857",
+            "legalName": "Acme Corporation Inc.",
+            "dba": "Acme Corp",
+            "taxId": "12-3456789",
+            "isVerified": true,
+            "billingAddress": {
+              "street": "123 Main Street",
+              "street2": "Suite 100",
+              "city": "New York",
+              "state": "NY",
+              "zipCode": "10001",
+              "county": "New York",
+              "country": "US",
+              "uspsValidated": true,
+              "addressType": "BUSINESS"
+            },
+            "accountsPayableEmailAddress": "ap@acme.com",
+            "accountsPayablePhoneNumber": "(555) 123-4567",
+            "statementsInvoicesEmail": "billing@acme.com",
+            "stateOfIncorporation": "DE",
+            "businessType": "C_CORP",
+            "poRequired": false,
+            "internalId": "ACME_001",
+            "ownersOfficersSignatories": [
+              {
+                "firstName": "John",
+                "lastName": "Smith",
+                "jobTitle": "CEO",
+                "emailAddress": "john@acme.com",
+                "phoneNumber": "(555) 123-4567",
+                "isVerified": true
+              }
+            ],
+            "secretaryOfState": {
+              "registeredNames": [
+                "Acme Corporation Inc.",
+                "Acme Corp"
+              ]
+            }
+          },
+          "creditApplication": {
+            "id": "credit_application_ABC123",
+            "reviewStatus": "APPLICATION",
+            "nextReviewDate": "2026-02-15",
+            "flow": "standard",
+            "applicantInformation": {
+              "name": "John Smith",
+              "firstName": "John",
+              "lastName": "Smith",
+              "title": "CEO",
+              "email": "john@acme.com"
+            },
+            "defaultCreditLimit": 50000.0,
+            "creditLimitCurrency": "USD",
+            "defaultCreditTerms": "NET 30",
+            "taxDocumentLinks": [
+              "https://nuvo.com/secure-document/xyz789"
+            ],
+            "dashboardUrl": "https://www.nuvo.com/customers/credit-app/ABC123",
+            "additionalFieldResponses": {
+              "annual_revenue": "5000000",
+              "years_in_business": "10"
+            },
+            "internalFieldsValues": {
+              "someSectionKey1": {
+                "account_manager": "Jane Doe",
+                "priority": "high",
+                "territory": "West Coast"
+              }
+            },
+            "businessLocations": [
+              {
+                "street": "456 Factory Road",
+                "street2": "",
+                "city": "Buffalo",
+                "state": "NY",
+                "zipCode": "14201",
+                "county": "Erie",
+                "country": "US",
+                "uspsValidated": true,
+                "addressType": "BUSINESS"
+              }
+            ],
+            "salesRepresentatives": [
+              {
+                "name": "Sarah Johnson",
+                "email": "sarah@yourcompany.com",
+                "phone": "(555) 987-6543",
+                "title": "Account Manager"
+              }
+            ],
+            "notes": [
+              {
+                "createdAt": "2026-01-15T10:30:00Z",
+                "message": "Customer prefers email communication",
+                "isSystemNote": false,
+                "assets": []
+              }
+            ],
+            "signatures": [
+              {
+                "kind": "T&C",
+                "name": "John Smith",
+                "email": "john@acme.com",
+                "title": "CEO"
+              },
+              {
+                "kind": "CUSTOM",
+                "name": "John Smith",
+                "email": "john@acme.com",
+                "title": "CEO",
+                "customSignatureKey": "shippingReleaseForm"
+              }
+            ]
+          }
+        }
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LegacyRelationshipStatus": {
+        "type": "string",
+        "enum": [
+          "INVITE_DRAFT",
+          "INVITE_PENDING",
+          "INVITE_PREAPPROVED",
+          "INVITE_ACCEPTED",
+          "INVITE_REJECTED",
+          "PREFILLED_LEGACY",
+          "IN_REVIEW",
+          "APPROVED",
+          "REJECTED",
+          "CHANGE_REQUESTED"
+        ],
+        "title": "LegacyRelationshipStatus",
+        "description": "An enumeration."
+      },
+      "ManualPayload": {
+        "properties": {
+          "webhookVersion": {
+            "type": "string",
+            "enum": [
+              "0.0.9"
+            ],
+            "title": "Webhookversion",
+            "description": "Payload schema version.",
+            "default": "0.0.9"
+          },
+          "eventUuid": {
+            "type": "string",
+            "title": "Eventuuid",
+            "description": "Unique id for this delivery. Use for idempotency."
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp",
+            "description": "UTC timestamp the event was emitted."
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/WebhookMetadata"
+          },
+          "buyer": {
+            "$ref": "#/components/schemas/WebhookBuyer"
+          },
+          "creditApplication": {
+            "$ref": "#/components/schemas/WebhookCustomerApplication"
+          },
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "MANUAL"
+            ],
+            "title": "Eventtype"
+          }
+        },
+        "type": "object",
+        "required": [
+          "webhookVersion",
+          "eventUuid",
+          "timestamp",
+          "metadata",
+          "creditApplication",
+          "eventType"
+        ],
+        "title": "ManualPayload",
+        "example": {
+          "eventType": "MANUAL",
+          "webhookVersion": "0.0.9",
+          "eventUuid": "13c272c3-ee0b-4a0a-bcf0-41ef9d8cbe89",
+          "timestamp": "2026-01-15T14:30:00Z",
+          "metadata": {
+            "referenceId": "customer_ref_123"
+          },
+          "buyer": {
+            "buyerId": "buyer_03490394857",
+            "legalName": "Acme Corporation Inc.",
+            "dba": "Acme Corp",
+            "taxId": "12-3456789",
+            "isVerified": true,
+            "billingAddress": {
+              "street": "123 Main Street",
+              "street2": "Suite 100",
+              "city": "New York",
+              "state": "NY",
+              "zipCode": "10001",
+              "county": "New York",
+              "country": "US",
+              "uspsValidated": true,
+              "addressType": "BUSINESS"
+            },
+            "accountsPayableEmailAddress": "ap@acme.com",
+            "accountsPayablePhoneNumber": "(555) 123-4567",
+            "statementsInvoicesEmail": "billing@acme.com",
+            "stateOfIncorporation": "DE",
+            "businessType": "C_CORP",
+            "poRequired": false,
+            "internalId": "ACME_001",
+            "ownersOfficersSignatories": [
+              {
+                "firstName": "John",
+                "lastName": "Smith",
+                "jobTitle": "CEO",
+                "emailAddress": "john@acme.com",
+                "phoneNumber": "(555) 123-4567",
+                "isVerified": true
+              }
+            ],
+            "secretaryOfState": {
+              "registeredNames": [
+                "Acme Corporation Inc.",
+                "Acme Corp"
+              ]
+            }
+          },
+          "creditApplication": {
+            "id": "credit_application_ABC123",
+            "reviewStatus": "APPLICATION",
+            "nextReviewDate": "2026-02-15",
+            "flow": "standard",
+            "applicantInformation": {
+              "name": "John Smith",
+              "firstName": "John",
+              "lastName": "Smith",
+              "title": "CEO",
+              "email": "john@acme.com"
+            },
+            "defaultCreditLimit": 50000.0,
+            "creditLimitCurrency": "USD",
+            "defaultCreditTerms": "NET 30",
+            "taxDocumentLinks": [
+              "https://nuvo.com/secure-document/xyz789"
+            ],
+            "dashboardUrl": "https://www.nuvo.com/customers/credit-app/ABC123",
+            "additionalFieldResponses": {
+              "annual_revenue": "5000000",
+              "years_in_business": "10"
+            },
+            "internalFieldsValues": {
+              "someSectionKey1": {
+                "account_manager": "Jane Doe",
+                "priority": "high",
+                "territory": "West Coast"
+              }
+            },
+            "businessLocations": [
+              {
+                "street": "456 Factory Road",
+                "street2": "",
+                "city": "Buffalo",
+                "state": "NY",
+                "zipCode": "14201",
+                "county": "Erie",
+                "country": "US",
+                "uspsValidated": true,
+                "addressType": "BUSINESS"
+              }
+            ],
+            "salesRepresentatives": [
+              {
+                "name": "Sarah Johnson",
+                "email": "sarah@yourcompany.com",
+                "phone": "(555) 987-6543",
+                "title": "Account Manager"
+              }
+            ],
+            "notes": [
+              {
+                "createdAt": "2026-01-15T10:30:00Z",
+                "message": "Customer prefers email communication",
+                "isSystemNote": false,
+                "assets": []
+              }
+            ],
+            "signatures": [
+              {
+                "kind": "T&C",
+                "name": "John Smith",
+                "email": "john@acme.com",
+                "title": "CEO"
+              },
+              {
+                "kind": "CUSTOM",
+                "name": "John Smith",
+                "email": "john@acme.com",
+                "title": "CEO",
+                "customSignatureKey": "shippingReleaseForm"
+              }
+            ]
+          }
+        }
+      },
+      "ReviewStatus": {
+        "type": "string",
+        "enum": [
+          "PLACEHOLDER_APPLICATION",
+          "PROVISIONAL_DATA",
+          "INCOMPLETE_APPLICATION",
+          "APPLICATION",
+          "REJECTED_APPLICATION",
+          "PLACEHOLDER_ACCOUNT",
+          "INCOMPLETE_ACCOUNT",
+          "ACTIVE_ACCOUNT",
+          "REVIEW_ACCOUNT",
+          "REMOVED_ACCOUNT"
+        ],
+        "title": "ReviewStatus",
+        "description": "A Review Status tracks the state of information submitted from one company to another.\nThe most prominent example of this is Customer Applications, where buyers submit information to suppliers. Suppliers can use this information to onboard and manage the buyer (their customer).\n\nReview Statuses follow these principles:\n- Bidirectional visibility and transparency: both sides see the same status\n- Certain actions can change the status, and there is a well defined state machine that governs these transitions.\n- See `knowledge/review_status_state_machine.md` for more details."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WebhookAddress": {
+        "properties": {
+          "street": {
+            "type": "string",
+            "title": "Street",
+            "description": "Street address line 1."
+          },
+          "street2": {
+            "type": "string",
+            "title": "Street2",
+            "description": "Street address line 2."
+          },
+          "city": {
+            "type": "string",
+            "title": "City",
+            "description": "City."
+          },
+          "state": {
+            "type": "string",
+            "title": "State",
+            "description": "State or region."
+          },
+          "zipCode": {
+            "type": "string",
+            "title": "Zipcode",
+            "description": "ZIP or postal code."
+          },
+          "country": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Country"
+              }
+            ],
+            "description": "Two-letter country code (ISO 3166-1 alpha-2)."
+          },
+          "county": {
+            "type": "string",
+            "title": "County",
+            "description": "County name."
+          },
+          "uspsValidated": {
+            "type": "boolean",
+            "title": "Uspsvalidated",
+            "description": "Whether the address has been USPS-validated."
+          },
+          "addressType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookResidentialDeliveryIndicator"
+              }
+            ],
+            "description": "Residential vs. business classification of the address."
+          },
+          "recordType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookSmartyAddressRecordType"
+              }
+            ],
+            "description": "USPS record type code from Smarty metadata."
+          }
+        },
+        "type": "object",
+        "required": [
+          "country"
+        ],
+        "title": "WebhookAddress"
+      },
+      "WebhookApplicantInformation": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "firstName": {
+            "type": "string",
+            "title": "Firstname"
+          },
+          "lastName": {
+            "type": "string",
+            "title": "Lastname"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          }
+        },
+        "type": "object",
+        "title": "WebhookApplicantInformation"
+      },
+      "WebhookAsset": {
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "title": "Createdat"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "createdAt",
+          "url"
+        ],
+        "title": "WebhookAsset"
+      },
+      "WebhookBuyer": {
+        "properties": {
+          "buyerId": {
+            "type": "string",
+            "title": "Buyerid",
+            "description": "Nuvo buyer company id."
+          },
+          "legalName": {
+            "type": "string",
+            "title": "Legalname"
+          },
+          "dba": {
+            "type": "string",
+            "title": "Dba",
+            "description": "Doing-business-as name."
+          },
+          "taxId": {
+            "type": "string",
+            "title": "Taxid"
+          },
+          "stateOfIncorporation": {
+            "type": "string",
+            "title": "Stateofincorporation"
+          },
+          "businessType": {
+            "type": "string",
+            "title": "Businesstype",
+            "description": "One of SOLE_PROPRIETORSHIP, PARTNERSHIP, LLC, COOPERATIVE, C_CORP, S_CORP, NON_PROFIT_ORGANIZATION, PUBLIC_AGENCY."
+          },
+          "accountsPayableEmailAddress": {
+            "type": "string",
+            "title": "Accountspayableemailaddress"
+          },
+          "accountsPayablePhoneNumber": {
+            "type": "string",
+            "title": "Accountspayablephonenumber"
+          },
+          "billingAddress": {
+            "$ref": "#/components/schemas/WebhookAddress"
+          },
+          "primaryBusinessAddress": {
+            "$ref": "#/components/schemas/WebhookAddress"
+          },
+          "organizationBusinessAddress": {
+            "$ref": "#/components/schemas/WebhookAddress"
+          },
+          "statementsInvoicesEmail": {
+            "type": "string",
+            "title": "Statementsinvoicesemail"
+          },
+          "poRequired": {
+            "type": "boolean",
+            "title": "Porequired"
+          },
+          "internalId": {
+            "type": "string",
+            "title": "Internalid",
+            "description": "Customer-supplied internal id assigned to this buyer."
+          },
+          "ownersOfficersSignatories": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookPersonnel"
+            },
+            "type": "array",
+            "title": "Ownersofficerssignatories"
+          },
+          "secretaryOfState": {
+            "$ref": "#/components/schemas/WebhookSecretaryOfState"
+          },
+          "isVerified": {
+            "type": "boolean",
+            "title": "Isverified",
+            "description": "Whether this buyer has been identity-verified."
+          }
+        },
+        "type": "object",
+        "required": [
+          "isVerified"
+        ],
+        "title": "WebhookBuyer"
+      },
+      "WebhookCustomerApplication": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Credit application id."
+          },
+          "applicantInformation": {
+            "$ref": "#/components/schemas/WebhookApplicantInformation"
+          },
+          "reviewStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReviewStatus"
+              }
+            ],
+            "description": "Application review status."
+          },
+          "nextReviewDate": {
+            "type": "string",
+            "title": "Nextreviewdate",
+            "description": "ISO 8601 date for the next scheduled review."
+          },
+          "flow": {
+            "type": "string",
+            "title": "Flow",
+            "description": "Configuration slug used for this application."
+          },
+          "taxDocumentLinks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Taxdocumentlinks"
+          },
+          "defaultCreditLimit": {
+            "type": "number",
+            "title": "Defaultcreditlimit"
+          },
+          "defaultCreditTerms": {
+            "type": "string",
+            "title": "Defaultcreditterms"
+          },
+          "creditLimitCurrency": {
+            "type": "string",
+            "title": "Creditlimitcurrency"
+          },
+          "additionalFieldResponses": {
+            "type": "object",
+            "title": "Additionalfieldresponses",
+            "description": "Responses to custom credit application questions."
+          },
+          "internalFieldsValues": {
+            "type": "object",
+            "title": "Internalfieldsvalues",
+            "description": "Internal field values, organized as {section_key: {field_key: value}}."
+          },
+          "dashboardUrl": {
+            "type": "string",
+            "title": "Dashboardurl"
+          },
+          "businessLocations": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookAddress"
+            },
+            "type": "array",
+            "title": "Businesslocations"
+          },
+          "salesRepresentatives": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookSalesRepresentative"
+            },
+            "type": "array",
+            "title": "Salesrepresentatives"
+          },
+          "notes": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookNote"
+            },
+            "type": "array",
+            "title": "Notes"
+          },
+          "signatures": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookSignature"
+            },
+            "type": "array",
+            "title": "Signatures"
+          },
+          "paymentBankAccounts": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookPaymentBankAccount"
+            },
+            "type": "array",
+            "title": "Paymentbankaccounts",
+            "description": "Only included when payment bank account export is enabled for the supplier."
+          },
+          "isSharedParentLimit": {
+            "type": "boolean",
+            "title": "Issharedparentlimit",
+            "description": "True when the credit limit is shared with a parent entity."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "applicantInformation",
+          "flow",
+          "dashboardUrl"
+        ],
+        "title": "WebhookCustomerApplication"
+      },
+      "WebhookMetadata": {
+        "properties": {
+          "referenceId": {
+            "type": "string",
+            "title": "Referenceid",
+            "description": "Reference id supplied by the customer when the application was created."
+          }
+        },
+        "type": "object",
+        "title": "WebhookMetadata"
+      },
+      "WebhookNote": {
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "title": "Createdat"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "isSystemNote": {
+            "type": "boolean",
+            "title": "Issystemnote"
+          },
+          "assets": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookAsset"
+            },
+            "type": "array",
+            "title": "Assets"
+          }
+        },
+        "type": "object",
+        "required": [
+          "createdAt",
+          "isSystemNote"
+        ],
+        "title": "WebhookNote"
+      },
+      "WebhookPaymentBankAccount": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "$ref": "#/components/schemas/WebhookPaymentBankAccountType"
+          },
+          "accountNumber": {
+            "type": "string",
+            "title": "Accountnumber"
+          },
+          "routingNumber": {
+            "type": "string",
+            "title": "Routingnumber"
+          },
+          "owners": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookPaymentBankAccountOwner"
+            },
+            "type": "array",
+            "title": "Owners"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "WebhookPaymentBankAccount"
+      },
+      "WebhookPaymentBankAccountOwner": {
+        "properties": {
+          "names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Names"
+          }
+        },
+        "type": "object",
+        "required": [
+          "names"
+        ],
+        "title": "WebhookPaymentBankAccountOwner"
+      },
+      "WebhookPaymentBankAccountType": {
+        "type": "string",
+        "enum": [
+          "CHECKING",
+          "SAVINGS",
+          "OTHER"
+        ],
+        "title": "WebhookPaymentBankAccountType",
+        "description": "An enumeration."
+      },
+      "WebhookPersonnel": {
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "title": "Firstname"
+          },
+          "lastName": {
+            "type": "string",
+            "title": "Lastname"
+          },
+          "jobTitle": {
+            "type": "string",
+            "title": "Jobtitle"
+          },
+          "emailAddress": {
+            "type": "string",
+            "title": "Emailaddress"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "title": "Phonenumber"
+          },
+          "isVerified": {
+            "type": "boolean",
+            "title": "Isverified",
+            "description": "Whether this person has verified their identity."
+          }
+        },
+        "type": "object",
+        "required": [
+          "isVerified"
+        ],
+        "title": "WebhookPersonnel"
+      },
+      "WebhookResidentialDeliveryIndicator": {
+        "type": "string",
+        "enum": [
+          "BUSINESS",
+          "RESIDENTIAL",
+          "UNKNOWN"
+        ],
+        "title": "WebhookResidentialDeliveryIndicator",
+        "description": "An enumeration."
+      },
+      "WebhookResponse": {
+        "properties": {
+          "internalFields": {
+            "additionalProperties": {
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Internalfields"
+          },
+          "customerInternalId": {
+            "type": "string",
+            "title": "Customerinternalid"
+          }
+        },
+        "type": "object",
+        "title": "WebhookResponse"
+      },
+      "WebhookSalesRepresentative": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "phone": {
+            "type": "string",
+            "title": "Phone"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "nickname": {
+            "type": "string",
+            "title": "Nickname"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "WebhookSalesRepresentative"
+      },
+      "WebhookSecretaryOfState": {
+        "properties": {
+          "registeredNames": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Registerednames",
+            "description": "Business names registered with the Secretary of State."
+          }
+        },
+        "type": "object",
+        "required": [
+          "registeredNames"
+        ],
+        "title": "WebhookSecretaryOfState"
+      },
+      "WebhookSignature": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "phone": {
+            "type": "string",
+            "title": "Phone"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "description": "Signature kind (e.g., 'T&C', 'CUSTOM')."
+          },
+          "customSignatureKey": {
+            "type": "string",
+            "title": "Customsignaturekey",
+            "description": "Identifier for custom signature blocks (only present when kind='CUSTOM')."
+          },
+          "signedContent": {
+            "type": "string",
+            "title": "Signedcontent",
+            "description": "Raw markdown the signer accepted."
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "title": "WebhookSignature"
+      },
+      "WebhookSmartyAddressRecordType": {
+        "type": "string",
+        "enum": [
+          "F",
+          "G",
+          "H",
+          "P",
+          "R",
+          "S"
+        ],
+        "title": "WebhookSmartyAddressRecordType",
+        "description": "USPS/Smarty record type code describing the matched address record.\n\nValues mirror Smarty US Street `metadata.record_type`:\n- F: Firm \u2014 Address for a specific company or organization\n- G: General Delivery \u2014 Post office holds mail for pickup\n- H: High-rise \u2014 Building with multiple units served by one delivery point\n- P: PO Box \u2014 Post Office Box address\n- R: Rural Route \u2014 Rural highway contract route\n- S: Street \u2014 Standard street address"
+      }
+    }
+  }
+}

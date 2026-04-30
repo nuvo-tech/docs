@@ -1,33 +1,72 @@
 ---
 title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+description: 'The Nuvo Public API for programmatic access to customers and credit data.'
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+# Overview
 
-## Welcome
+The Nuvo Public API is a REST API for reading and writing data in your Nuvo workspace programmatically. It enables real-time integrations with your own CRMs, ERPs, and internal tools without screen-scraping or polling the dashboard.
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). This site is generated from the following OpenAPI specification.
+## API Resources
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+The Public API currently exposes the following resource groups:
 
-## Authentication
+1. **`Status`** - Healthcheck endpoint to verify connectivity and authentication
+2. **`Customers`** - List, retrieve, and create customer (buyer) records linked to your organization
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+## Request Format
 
-```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
-```
+- **Method**: GET / POST (per endpoint)
+- **Content-Type**: application/json
+- **Current version**: `01-05-2026` (sent via the `Nuvo-API-Version` header on every request)
+
+**Base URLs:**
+
+- **Production**: `https://api.nuvo.com`
+- **Staging**: `https://api.staging.nuvo.com`
+
+**API key prefixes**: `sk_prod_` (production), `sk_stg_` (staging)
+
+## Authentication & Security
+
+Every request authenticates with a Bearer API key issued from your Nuvo dashboard under **Settings → Integrations**.
+
+**Headers:**
+
+- `Authorization`: `Bearer sk_prod_your_api_key_here`
+- `Nuvo-API-Version`: `01-05-2026`
+
+**Key Details:**
+
+- Keys are environment-scoped — a staging key cannot be used in production and vice versa
+- Keys should be stored as secrets and never committed to source control
+- Rotate keys immediately if you suspect they've been exposed
+
+A `401 Unauthorized` is returned for missing, malformed, or revoked keys.
+
+## Error Handling & Retry Logic
+
+The API uses standard HTTP status codes:
+
+- **`200`** - Success
+- **`401`** - Missing, invalid, or revoked API key
+- **`422`** - Validation error (response body describes the offending field)
+- **`429`** - Rate limit exceeded
+- **`5xx`** - Server error; safe to retry with exponential backoff
+
+Validation errors include a JSON body with field-level detail. For `5xx` responses, retry with jittered exponential backoff — do not retry `4xx` responses, as they will keep failing.
+
+## Monitoring & Troubleshooting
+
+### Common Issues
+
+1. **`401 Unauthorized`**: Check the API key prefix matches the environment and that the key hasn't been revoked
+2. **`422 Validation Error`**: Inspect the response body for field-level error messages
+3. **Missing version header**: All requests must include `Nuvo-API-Version` — omitting it will fail
+4. **Wrong base URL**: Confirm you're hitting `api.nuvo.com` for production and `api.staging.nuvo.com` for staging
+
+## Development & Testing
+
+- **Use the staging environment** (`api.staging.nuvo.com`) for initial integration work
+- **Pin the API version** in your client config so future schema changes don't silently break you
+- **Use the healthcheck endpoint** (`GET /status/healthcheck`) to verify connectivity and key validity from CI or deployment scripts
