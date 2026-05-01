@@ -255,31 +255,36 @@
             "type": "string",
             "maxLength": 500,
             "title": "Line1",
-            "description": "Address line 1 (e.g., street, PO Box, or company name)."
+            "description": "Address line 1 (e.g., street, PO Box, or company name).",
+            "example": "123 Market St"
           },
           "line2": {
             "type": "string",
             "maxLength": 500,
             "title": "Line2",
-            "description": "Address line 2 (e.g., apartment, suite, unit, or building)."
+            "description": "Address line 2 (e.g., apartment, suite, unit, or building).",
+            "example": "Suite 400"
           },
           "city": {
             "type": "string",
             "maxLength": 100,
             "title": "City",
-            "description": "City, district, suburb, town, or village."
+            "description": "City, district, suburb, town, or village.",
+            "example": "San Francisco"
           },
           "state": {
             "type": "string",
             "maxLength": 100,
             "title": "State",
-            "description": "State, county, province, or region."
+            "description": "State, county, province, or region.",
+            "example": "CA"
           },
           "postal_code": {
             "type": "string",
             "maxLength": 20,
             "title": "Postal Code",
-            "description": "ZIP or postal code."
+            "description": "ZIP or postal code.",
+            "example": "94103"
           },
           "country": {
             "allOf": [
@@ -287,7 +292,8 @@
                 "$ref": "#/components/schemas/Country"
               }
             ],
-            "description": "Two-letter country code (ISO 3166-1 alpha-2)."
+            "description": "Two-letter country code (ISO 3166-1 alpha-2).",
+            "example": "US"
           }
         },
         "type": "object",
@@ -300,19 +306,22 @@
             "type": "string",
             "format": "email",
             "title": "Email",
-            "description": "Email address of the contact."
+            "description": "Email address of the contact.",
+            "example": "jane@example.com"
           },
           "name": {
             "type": "string",
             "maxLength": 256,
             "title": "Name",
-            "description": "Full name of the contact."
+            "description": "Full name of the contact.",
+            "example": "Jane Doe"
           },
           "title": {
             "type": "string",
             "maxLength": 100,
             "title": "Title",
-            "description": "Job title or role of the contact."
+            "description": "Job title or role of the contact.",
+            "example": "CFO"
           }
         },
         "type": "object",
@@ -585,12 +594,14 @@
             "type": "string",
             "maxLength": 256,
             "title": "Legal Name",
-            "description": "The customer company's legal business name."
+            "description": "The customer company's legal business name.",
+            "example": "Acme Supply Co."
           },
           "configuration_slug": {
             "type": "string",
             "title": "Configuration Slug",
-            "description": "The slug identifier for the credit application configuration to use. "
+            "description": "The slug identifier for the credit application configuration to use. ",
+            "example": "default"
           },
           "contact": {
             "allOf": [
@@ -613,7 +624,8 @@
           "sales_representative_id": {
             "type": "string",
             "title": "Sales Representative Id",
-            "description": "Nuvo ID of the sales representative to assign to this customer. The user must have the SALES_REP or SALES_MANAGER role in your organization."
+            "description": "Nuvo ID of the sales representative to assign to this customer. The user must have the SALES_REP or SALES_MANAGER role in your organization.",
+            "example": "a1b2c3d4e5f6789012345678abcdef01"
           },
           "netsuite": {
             "allOf": [
@@ -630,7 +642,12 @@
             },
             "type": "object",
             "title": "Internal Fields",
-            "description": "Internal fields for storing additional information, organized by section. Format: {section_key: {field_key: value}}. Section and field keys must match your configured internal fields schema."
+            "description": "Internal fields for storing additional information, organized by section. Format: {section_key: {field_key: value}}. Section and field keys must match your configured internal fields schema.",
+            "example": {
+              "underwriting": {
+                "risk_tier": "A"
+              }
+            }
           }
         },
         "additionalProperties": false,
@@ -648,18 +665,21 @@
           "id": {
             "type": "string",
             "title": "Id",
-            "description": "Unique identifier for the customer."
+            "description": "Unique identifier for the customer.",
+            "example": "cust_a1b2c3d4e5f6789012345678abcdef01"
           },
           "created_at": {
             "type": "string",
             "format": "date-time",
             "title": "Created At",
-            "description": "Timestamp when the customer was created."
+            "description": "Timestamp when the customer was created.",
+            "example": "2026-04-30T12:34:56Z"
           },
           "configuration_slug": {
             "type": "string",
             "title": "Configuration Slug",
-            "description": "The slug identifier for the credit application configuration."
+            "description": "The slug identifier for the credit application configuration.",
+            "example": "default"
           },
           "company": {
             "allOf": [
@@ -673,7 +693,8 @@
           "status": {
             "type": "string",
             "title": "Status",
-            "description": "Current status of the customer application."
+            "description": "Current status of the customer application.",
+            "example": "ACTIVE_ACCOUNT"
           },
           "internal_fields": {
             "additionalProperties": {
@@ -681,17 +702,24 @@
             },
             "type": "object",
             "title": "Internal Fields",
-            "description": "Internal fields values organized by section. Null if internal fields are not configured. Fields without values are returned as null within their section structure."
+            "description": "Internal fields values organized by section. Null if internal fields are not configured. Fields without values are returned as null within their section structure.",
+            "example": {
+              "underwriting": {
+                "risk_tier": "A"
+              }
+            }
           },
           "customer_id": {
             "type": "string",
             "title": "Customer Id",
-            "description": "Custom customer ID assigned to this customer, if any."
+            "description": "Custom customer ID assigned to this customer, if any.",
+            "example": "CUSTOM-ID-9876"
           },
           "application_link": {
             "type": "string",
             "title": "Application Link",
-            "description": "URL link to the credit application for the customer to complete."
+            "description": "URL link to the credit application for the customer to complete.",
+            "example": "https://nuvo.com/applications/cust_a1b2c3d4e5f6789012345678abcdef01"
           }
         },
         "type": "object",
@@ -711,12 +739,14 @@
           "id": {
             "type": "string",
             "title": "Id",
-            "description": "The alias id that was requested."
+            "description": "The alias id that was requested.",
+            "example": "cust_a1b2c3d4e5f6789012345678abcdef01"
           },
           "aliases": {
             "type": "string",
             "title": "Aliases",
-            "description": "The canonical customer id this alias resolves to."
+            "description": "The canonical customer id this alias resolves to.",
+            "example": "cust_a1b2c3d4e5f6789012345678abcdef01"
           }
         },
         "type": "object",
@@ -732,12 +762,14 @@
           "id": {
             "type": "string",
             "title": "Id",
-            "description": "Unique identifier for the company."
+            "description": "Unique identifier for the company.",
+            "example": "co_a1b2c3d4e5f6789012345678abcdef01"
           },
           "legal_name": {
             "type": "string",
             "title": "Legal Name",
-            "description": "The company's legal business name."
+            "description": "The company's legal business name.",
+            "example": "Acme Supply Co."
           },
           "primary_address": {
             "allOf": [
@@ -762,18 +794,21 @@
           "id": {
             "type": "string",
             "title": "Id",
-            "description": "Unique identifier for the customer."
+            "description": "Unique identifier for the customer.",
+            "example": "cust_a1b2c3d4e5f6789012345678abcdef01"
           },
           "created_at": {
             "type": "string",
             "format": "date-time",
             "title": "Created At",
-            "description": "Timestamp when the customer was created."
+            "description": "Timestamp when the customer was created.",
+            "example": "2026-04-30T12:34:56Z"
           },
           "configuration_slug": {
             "type": "string",
             "title": "Configuration Slug",
-            "description": "The slug identifier for the credit application configuration."
+            "description": "The slug identifier for the credit application configuration.",
+            "example": "default"
           },
           "company": {
             "allOf": [
@@ -787,7 +822,8 @@
           "status": {
             "type": "string",
             "title": "Status",
-            "description": "Current status of the customer application."
+            "description": "Current status of the customer application.",
+            "example": "ACTIVE_ACCOUNT"
           },
           "internal_fields": {
             "additionalProperties": {
@@ -795,12 +831,18 @@
             },
             "type": "object",
             "title": "Internal Fields",
-            "description": "Internal fields values organized by section. Null if internal fields are not configured. Fields without values are returned as null within their section structure."
+            "description": "Internal fields values organized by section. Null if internal fields are not configured. Fields without values are returned as null within their section structure.",
+            "example": {
+              "underwriting": {
+                "risk_tier": "A"
+              }
+            }
           },
           "customer_id": {
             "type": "string",
             "title": "Customer Id",
-            "description": "Custom customer ID assigned to this customer, if any."
+            "description": "Custom customer ID assigned to this customer, if any.",
+            "example": "CUSTOM-ID-9876"
           }
         },
         "type": "object",
@@ -846,7 +888,8 @@
           "has_more": {
             "type": "boolean",
             "title": "Has More",
-            "description": "Whether there are more results available after this set."
+            "description": "Whether there are more results available after this set.",
+            "example": false
           },
           "customers": {
             "items": {
@@ -871,7 +914,8 @@
             "type": "string",
             "maxLength": 100,
             "title": "Customer Id",
-            "description": "NetSuite internal customer ID. This will be used to associate the Nuvo customer with the existing NetSuite customer record."
+            "description": "NetSuite internal customer ID. This will be used to associate the Nuvo customer with the existing NetSuite customer record.",
+            "example": "12345"
           }
         },
         "type": "object",
@@ -886,13 +930,19 @@
             },
             "type": "object",
             "title": "Internal Fields",
-            "description": "Internal fields for this customer, organized by section. Format: {section_key: {field_key: value}}. Section and field keys must match your configured internal fields schema."
+            "description": "Internal fields for this customer, organized by section. Format: {section_key: {field_key: value}}. Section and field keys must match your configured internal fields schema.",
+            "example": {
+              "underwriting": {
+                "risk_tier": "A"
+              }
+            }
           },
           "customer_id": {
             "type": "string",
             "maxLength": 255,
             "title": "Customer Id",
-            "description": "Customer ID to assign to this customer. This is the same ID shown in the 'Assign Customer ID' modal. Cannot be set if the supplier has an ERP integration connected."
+            "description": "Customer ID to assign to this customer. This is the same ID shown in the 'Assign Customer ID' modal. Cannot be set if the supplier has an ERP integration connected.",
+            "example": "CUSTOM-ID-9876"
           }
         },
         "additionalProperties": false,

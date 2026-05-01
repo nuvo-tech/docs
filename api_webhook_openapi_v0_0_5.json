@@ -56,32 +56,38 @@
           "street": {
             "type": "string",
             "title": "Street",
-            "description": "Street address line 1."
+            "description": "Street address line 1.",
+            "example": "123 Market St"
           },
           "street2": {
             "type": "string",
             "title": "Street2",
-            "description": "Street address line 2."
+            "description": "Street address line 2.",
+            "example": "Suite 400"
           },
           "city": {
             "type": "string",
             "title": "City",
-            "description": "City."
+            "description": "City.",
+            "example": "San Francisco"
           },
           "state": {
             "type": "string",
             "title": "State",
-            "description": "State or region."
+            "description": "State or region.",
+            "example": "CA"
           },
           "zipCode": {
             "type": "string",
             "title": "Zipcode",
-            "description": "ZIP or postal code."
+            "description": "ZIP or postal code.",
+            "example": "94103"
           },
           "county": {
             "type": "string",
             "title": "County",
-            "description": "County name."
+            "description": "County name.",
+            "example": "San Francisco County"
           },
           "country": {
             "allOf": [
@@ -89,22 +95,26 @@
                 "$ref": "#/components/schemas/Country"
               }
             ],
-            "description": "Two-letter country code (ISO 3166-1 alpha-2)."
+            "description": "Two-letter country code (ISO 3166-1 alpha-2).",
+            "example": "US"
           },
           "uspsValidated": {
             "type": "boolean",
             "title": "Uspsvalidated",
-            "description": "Whether the address has been USPS-validated."
+            "description": "Whether the address has been USPS-validated.",
+            "example": true
           },
           "addressType": {
             "type": "string",
             "title": "Addresstype",
-            "description": "Residential vs. business classification of the address."
+            "description": "Residential vs. business classification of the address.",
+            "example": "BUSINESS"
           },
           "recordType": {
             "type": "string",
             "title": "Recordtype",
-            "description": "USPS record type code from Smarty metadata."
+            "description": "USPS record type code from Smarty metadata.",
+            "example": "S"
           }
         },
         "additionalProperties": false,
@@ -127,27 +137,32 @@
           "name": {
             "type": "string",
             "title": "Name",
-            "description": "Applicant's full name as supplied on the application."
+            "description": "Applicant's full name as supplied on the application.",
+            "example": "Jane Doe"
           },
           "firstName": {
             "type": "string",
             "title": "Firstname",
-            "description": "Applicant's first name."
+            "description": "Applicant's first name.",
+            "example": "Jane"
           },
           "lastName": {
             "type": "string",
             "title": "Lastname",
-            "description": "Applicant's last name."
+            "description": "Applicant's last name.",
+            "example": "Doe"
           },
           "email": {
             "type": "string",
             "title": "Email",
-            "description": "Applicant's email address."
+            "description": "Applicant's email address.",
+            "example": "jane@example.com"
           },
           "title": {
             "type": "string",
             "title": "Title",
-            "description": "Applicant's job title at the buyer company."
+            "description": "Applicant's job title at the buyer company.",
+            "example": "CFO"
           }
         },
         "additionalProperties": false,
@@ -166,22 +181,26 @@
           "createdAt": {
             "type": "string",
             "title": "Createdat",
-            "description": "ISO 8601 timestamp when the asset was attached."
+            "description": "ISO 8601 timestamp when the asset was attached.",
+            "example": "2026-04-30T12:34:56Z"
           },
           "name": {
             "type": "string",
             "title": "Name",
-            "description": "Display name of the asset."
+            "description": "Display name of the asset.",
+            "example": "Articles_of_Incorporation.pdf"
           },
           "description": {
             "type": "string",
             "title": "Description",
-            "description": "Optional description of the asset."
+            "description": "Optional description of the asset.",
+            "example": "Filed with the Delaware Secretary of State."
           },
           "url": {
             "type": "string",
             "title": "Url",
-            "description": "Signed URL for downloading the asset."
+            "description": "Signed URL for downloading the asset.",
+            "example": "https://files.nuvo.com/signed/abc123"
           }
         },
         "additionalProperties": false,
@@ -199,42 +218,50 @@
           "buyerId": {
             "type": "string",
             "title": "Buyerid",
-            "description": "Nuvo buyer company id."
+            "description": "Nuvo buyer company id.",
+            "example": "buyer_482913"
           },
           "legalName": {
             "type": "string",
             "title": "Legalname",
-            "description": "Buyer's registered legal name."
+            "description": "Buyer's registered legal name.",
+            "example": "Acme Supply Co."
           },
           "dba": {
             "type": "string",
             "title": "Dba",
-            "description": "Doing-business-as name."
+            "description": "Doing-business-as name.",
+            "example": "Acme"
           },
           "taxId": {
             "type": "string",
             "title": "Taxid",
-            "description": "Buyer tax identifier (e.g., EIN for US entities)."
+            "description": "Buyer tax identifier (e.g., EIN for US entities).",
+            "example": "12-3456789"
           },
           "stateOfIncorporation": {
             "type": "string",
             "title": "Stateofincorporation",
-            "description": "Two-letter US state code where the buyer is incorporated."
+            "description": "Two-letter US state code where the buyer is incorporated.",
+            "example": "DE"
           },
           "businessType": {
             "type": "string",
             "title": "Businesstype",
-            "description": "One of SOLE_PROPRIETORSHIP, PARTNERSHIP, LLC, COOPERATIVE, C_CORP, S_CORP, NON_PROFIT_ORGANIZATION, PUBLIC_AGENCY."
+            "description": "One of SOLE_PROPRIETORSHIP, PARTNERSHIP, LLC, COOPERATIVE, C_CORP, S_CORP, NON_PROFIT_ORGANIZATION, PUBLIC_AGENCY.",
+            "example": "LLC"
           },
           "accountsPayableEmailAddress": {
             "type": "string",
             "title": "Accountspayableemailaddress",
-            "description": "Email address for the buyer's accounts payable team."
+            "description": "Email address for the buyer's accounts payable team.",
+            "example": "ap@example.com"
           },
           "accountsPayablePhoneNumber": {
             "type": "string",
             "title": "Accountspayablephonenumber",
-            "description": "Phone number for the buyer's accounts payable team."
+            "description": "Phone number for the buyer's accounts payable team.",
+            "example": "+1-415-555-0100"
           },
           "billingAddress": {
             "allOf": [
@@ -248,17 +275,20 @@
           "statementsInvoicesEmail": {
             "type": "string",
             "title": "Statementsinvoicesemail",
-            "description": "Email address where statements and invoices should be delivered."
+            "description": "Email address where statements and invoices should be delivered.",
+            "example": "billing@example.com"
           },
           "poRequired": {
             "type": "boolean",
             "title": "Porequired",
-            "description": "Whether the buyer requires a purchase order on every invoice."
+            "description": "Whether the buyer requires a purchase order on every invoice.",
+            "example": false
           },
           "internalId": {
             "type": "string",
             "title": "Internalid",
-            "description": "Customer-supplied internal id assigned to this buyer."
+            "description": "Customer-supplied internal id assigned to this buyer.",
+            "example": "CUSTOM-ID-9876"
           },
           "ownersOfficersSignatories": {
             "items": {
@@ -271,7 +301,8 @@
           "isVerified": {
             "type": "boolean",
             "title": "Isverified",
-            "description": "Whether this buyer has been identity-verified."
+            "description": "Whether this buyer has been identity-verified.",
+            "example": true
           },
           "secretaryOfState": {
             "allOf": [
@@ -583,7 +614,8 @@
           "id": {
             "type": "string",
             "title": "Id",
-            "description": "Credit application id."
+            "description": "Credit application id.",
+            "example": "credit_application_340586730"
           },
           "applicantInformation": {
             "allOf": [
@@ -600,12 +632,14 @@
                 "$ref": "#/components/schemas/ReviewStatus"
               }
             ],
-            "description": "Application review status."
+            "description": "Application review status.",
+            "example": "ACTIVE_ACCOUNT"
           },
           "nextReviewDate": {
             "type": "string",
             "title": "Nextreviewdate",
-            "description": "ISO 8601 date for the next scheduled review."
+            "description": "ISO 8601 date for the next scheduled review.",
+            "example": "2027-04-30"
           },
           "taxDocumentLinks": {
             "items": {
@@ -613,37 +647,52 @@
             },
             "type": "array",
             "title": "Taxdocumentlinks",
-            "description": "Signed URLs for tax documents (e.g., W-9) attached to the application."
+            "description": "Signed URLs for tax documents (e.g., W-9) attached to the application.",
+            "example": [
+              "https://files.nuvo.com/signed/w9-abc"
+            ]
           },
           "defaultCreditLimit": {
             "type": "number",
             "title": "Defaultcreditlimit",
-            "description": "Approved credit limit for this buyer, in `creditLimitCurrency`."
+            "description": "Approved credit limit for this buyer, in `creditLimitCurrency`.",
+            "example": 5000.0
           },
           "defaultCreditTerms": {
             "type": "string",
             "title": "Defaultcreditterms",
-            "description": "Default credit terms applied to this buyer (e.g., 'NET 30')."
+            "description": "Default credit terms applied to this buyer (e.g., 'NET 30').",
+            "example": "NET 30"
           },
           "creditLimitCurrency": {
             "type": "string",
             "title": "Creditlimitcurrency",
-            "description": "ISO 4217 currency code for `defaultCreditLimit` (e.g., 'USD')."
+            "description": "ISO 4217 currency code for `defaultCreditLimit` (e.g., 'USD').",
+            "example": "USD"
           },
           "additionalFieldResponses": {
             "type": "object",
             "title": "Additionalfieldresponses",
-            "description": "Responses to custom credit application questions."
+            "description": "Responses to custom credit application questions.",
+            "example": {
+              "years_in_business": "5"
+            }
           },
           "internalFieldsValues": {
             "type": "object",
             "title": "Internalfieldsvalues",
-            "description": "Internal field values, organized as {section_key: {field_key: value}}."
+            "description": "Internal field values, organized as {section_key: {field_key: value}}.",
+            "example": {
+              "underwriting": {
+                "risk_tier": "A"
+              }
+            }
           },
           "dashboardUrl": {
             "type": "string",
             "title": "Dashboardurl",
-            "description": "Link to view this application in the Nuvo dashboard."
+            "description": "Link to view this application in the Nuvo dashboard.",
+            "example": "https://app.nuvo.com/customers/credit-app/abc123xyz"
           },
           "businessLocations": {
             "items": {
@@ -664,7 +713,8 @@
           "flow": {
             "type": "string",
             "title": "Flow",
-            "description": "Configuration slug used for this application."
+            "description": "Configuration slug used for this application.",
+            "example": "default"
           },
           "notes": {
             "items": {
@@ -722,7 +772,8 @@
           "referenceId": {
             "type": "string",
             "title": "Referenceid",
-            "description": "Reference id supplied by the customer when the application was created."
+            "description": "Reference id supplied by the customer when the application was created.",
+            "example": "PO-12345"
           }
         },
         "additionalProperties": false,
@@ -737,17 +788,20 @@
           "createdAt": {
             "type": "string",
             "title": "Createdat",
-            "description": "ISO 8601 timestamp when the note was created."
+            "description": "ISO 8601 timestamp when the note was created.",
+            "example": "2026-04-30T12:34:56Z"
           },
           "message": {
             "type": "string",
             "title": "Message",
-            "description": "Note body text."
+            "description": "Note body text.",
+            "example": "Approved with $5,000 limit."
           },
           "isSystemNote": {
             "type": "boolean",
             "title": "Issystemnote",
-            "description": "True if the note was generated by Nuvo rather than a human user."
+            "description": "True if the note was generated by Nuvo rather than a human user.",
+            "example": false
           },
           "assets": {
             "items": {
@@ -776,7 +830,8 @@
                 "$ref": "#/components/schemas/WebhookEventType"
               }
             ],
-            "description": "Discriminator for the event type."
+            "description": "Discriminator for the event type.",
+            "example": "CREDIT_APP_NEW"
           },
           "webhookVersion": {
             "type": "string",
@@ -784,12 +839,14 @@
               "0.0.5"
             ],
             "title": "Webhookversion",
-            "description": "Payload schema version."
+            "description": "Payload schema version.",
+            "example": "0.0.5"
           },
           "eventUuid": {
             "type": "string",
             "title": "Eventuuid",
-            "description": "Unique id for this delivery. Use for idempotency."
+            "description": "Unique id for this delivery. Use for idempotency.",
+            "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
           },
           "metadata": {
             "allOf": [
@@ -835,32 +892,38 @@
           "firstName": {
             "type": "string",
             "title": "Firstname",
-            "description": "First name."
+            "description": "First name.",
+            "example": "Jane"
           },
           "lastName": {
             "type": "string",
             "title": "Lastname",
-            "description": "Last name."
+            "description": "Last name.",
+            "example": "Doe"
           },
           "jobTitle": {
             "type": "string",
             "title": "Jobtitle",
-            "description": "Job title or role at the buyer company."
+            "description": "Job title or role at the buyer company.",
+            "example": "CFO"
           },
           "emailAddress": {
             "type": "string",
             "title": "Emailaddress",
-            "description": "Contact email address."
+            "description": "Contact email address.",
+            "example": "jane@example.com"
           },
           "phoneNumber": {
             "type": "string",
             "title": "Phonenumber",
-            "description": "Contact phone number."
+            "description": "Contact phone number.",
+            "example": "+1-415-555-0142"
           },
           "isVerified": {
             "type": "boolean",
             "title": "Isverified",
-            "description": "Whether this person has verified their identity."
+            "description": "Whether this person has verified their identity.",
+            "example": true
           }
         },
         "additionalProperties": false,
@@ -897,27 +960,32 @@
           "name": {
             "type": "string",
             "title": "Name",
-            "description": "Sales representative's full name."
+            "description": "Sales representative's full name.",
+            "example": "Sam Reynolds"
           },
           "email": {
             "type": "string",
             "title": "Email",
-            "description": "Sales representative's email address."
+            "description": "Sales representative's email address.",
+            "example": "sam@example.com"
           },
           "phone": {
             "type": "string",
             "title": "Phone",
-            "description": "Sales representative's phone number."
+            "description": "Sales representative's phone number.",
+            "example": "+1-415-555-0188"
           },
           "title": {
             "type": "string",
             "title": "Title",
-            "description": "Sales representative's job title."
+            "description": "Sales representative's job title.",
+            "example": "Account Executive"
           },
           "nickname": {
             "type": "string",
             "title": "Nickname",
-            "description": "Optional display nickname for the sales representative."
+            "description": "Optional display nickname for the sales representative.",
+            "example": "Sam"
           }
         },
         "additionalProperties": false,
@@ -939,7 +1007,10 @@
             },
             "type": "array",
             "title": "Registerednames",
-            "description": "Business names registered with the Secretary of State."
+            "description": "Business names registered with the Secretary of State.",
+            "example": [
+              "ACME SUPPLY CO LLC"
+            ]
           }
         },
         "additionalProperties": false,
@@ -951,32 +1022,38 @@
           "name": {
             "type": "string",
             "title": "Name",
-            "description": "Signer's full name."
+            "description": "Signer's full name.",
+            "example": "Jane Doe"
           },
           "email": {
             "type": "string",
             "title": "Email",
-            "description": "Signer's email address."
+            "description": "Signer's email address.",
+            "example": "jane@example.com"
           },
           "phone": {
             "type": "string",
             "title": "Phone",
-            "description": "Signer's phone number."
+            "description": "Signer's phone number.",
+            "example": "+1-415-555-0142"
           },
           "title": {
             "type": "string",
             "title": "Title",
-            "description": "Signer's job title at the buyer company."
+            "description": "Signer's job title at the buyer company.",
+            "example": "CFO"
           },
           "kind": {
             "type": "string",
             "title": "Kind",
-            "description": "Signature kind (e.g., 'T&C', 'CUSTOM')."
+            "description": "Signature kind (e.g., 'T&C', 'CUSTOM').",
+            "example": "T&C"
           },
           "customSignatureKey": {
             "type": "string",
             "title": "Customsignaturekey",
-            "description": "Identifier for custom signature blocks (only present when kind='CUSTOM')."
+            "description": "Identifier for custom signature blocks (only present when kind='CUSTOM').",
+            "example": "acme_master_agreement_v2"
           }
         },
         "additionalProperties": false,
