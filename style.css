@@ -16,16 +16,22 @@ a[href="/"],
   gap: 0.5rem;
 }
 
-/* a[href="/"]::after,
+a[href="/"]::after,
 #navbar-logo::after,
 .navbar-logo::after {
   content: "Documentation";
   font-size: 1.25rem;
   font-weight: 500;
-  color: inherit;
+  color: #000;
   white-space: nowrap;
   display: inline-block;
-} */
+}
+
+html.dark a[href="/"]::after,
+html.dark #navbar-logo::after,
+html.dark .navbar-logo::after {
+  color: #fff;
+}
 
 div:has(> [data-component-part="version-select-trigger"]) {
   position: absolute;
