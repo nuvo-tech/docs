@@ -625,7 +625,7 @@
             "type": "string",
             "title": "Sales Representative Id",
             "description": "Nuvo ID of the sales representative to assign to this customer. The user must have the SALES_REP or SALES_MANAGER role in your organization.",
-            "example": "a1b2c3d4e5f6789012345678abcdef01"
+            "example": "01HXX9F8JK4M5N6P7Q8R9S0T"
           },
           "netsuite": {
             "allOf": [
@@ -666,7 +666,7 @@
             "type": "string",
             "title": "Id",
             "description": "Unique identifier for the customer.",
-            "example": "cust_a1b2c3d4e5f6789012345678abcdef01"
+            "example": "cust_01HXX9F8JK4M5N6P7Q8R9S0T"
           },
           "created_at": {
             "type": "string",
@@ -713,13 +713,13 @@
             "type": "string",
             "title": "Customer Id",
             "description": "Custom customer ID assigned to this customer, if any.",
-            "example": "CUSTOM-ID-9876"
+            "example": "CUST-9876"
           },
           "application_link": {
             "type": "string",
             "title": "Application Link",
             "description": "URL link to the credit application for the customer to complete.",
-            "example": "https://nuvo.com/applications/cust_a1b2c3d4e5f6789012345678abcdef01"
+            "example": "https://app.nuvo.com/applications/cust_01HXX9F8JK4M5N6P7Q8R9S0T"
           }
         },
         "type": "object",
@@ -740,13 +740,13 @@
             "type": "string",
             "title": "Id",
             "description": "The alias id that was requested.",
-            "example": "cust_a1b2c3d4e5f6789012345678abcdef01"
+            "example": "cust_01HXX9F8JK4M5N6P7Q8R9S0T"
           },
           "aliases": {
             "type": "string",
             "title": "Aliases",
             "description": "The canonical customer id this alias resolves to.",
-            "example": "cust_a1b2c3d4e5f6789012345678abcdef01"
+            "example": "cust_01HXX9F8JK4M5N6P7Q8R9S0T"
           }
         },
         "type": "object",
@@ -763,7 +763,7 @@
             "type": "string",
             "title": "Id",
             "description": "Unique identifier for the company.",
-            "example": "co_a1b2c3d4e5f6789012345678abcdef01"
+            "example": "co_01HXX9F8JK4M5N6P7Q8R9S0T"
           },
           "legal_name": {
             "type": "string",
@@ -795,7 +795,7 @@
             "type": "string",
             "title": "Id",
             "description": "Unique identifier for the customer.",
-            "example": "cust_a1b2c3d4e5f6789012345678abcdef01"
+            "example": "cust_01HXX9F8JK4M5N6P7Q8R9S0T"
           },
           "created_at": {
             "type": "string",
@@ -842,7 +842,7 @@
             "type": "string",
             "title": "Customer Id",
             "description": "Custom customer ID assigned to this customer, if any.",
-            "example": "CUSTOM-ID-9876"
+            "example": "CUST-9876"
           }
         },
         "type": "object",
@@ -942,7 +942,7 @@
             "maxLength": 255,
             "title": "Customer Id",
             "description": "Customer ID to assign to this customer. This is the same ID shown in the 'Assign Customer ID' modal. Cannot be set if the supplier has an ERP integration connected.",
-            "example": "CUSTOM-ID-9876"
+            "example": "CUST-9876"
           }
         },
         "additionalProperties": false,

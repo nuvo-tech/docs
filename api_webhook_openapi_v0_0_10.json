@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Nuvo Webhooks v0.0.3",
-    "description": "# Overview\n\nNuvo emits HTTP POST webhook events to customer-configured endpoints when specific events occur in the credit application system. This enables real-time event-driven integrations without polling.\n\n## Webhook Event Types\n\nEvery webhook Nuvo emits delivers the **same payload shape**; only the `eventType` field differs. Inspect `eventType` to dispatch on the event:\n\n| `eventType`                          | Fires when                                                       |\n|--------------------------------------|------------------------------------------------------------------|\n| `CREDIT_APP_NEW`                     | A buyer submits a new credit application.                        |\n| `CREDIT_LIMIT_CHANGE`                | A credit limit is modified for an existing customer.             |\n| `CREDIT_APP_STATUS_CHANGE`           | An application's review status changes (approval, rejection, \u2026). |\n| `CUSTOMER_APP_SIGNATURE_REQUESTED`   | A signature is requested on a customer application.              |\n| `MANUAL`                             | A webhook is manually triggered (testing or special cases).      |\n\n## Request Format\n\n- **Method**: POST\n- **Content-Type**: application/json\n- **Timeout**: 10 seconds (your endpoint must respond within this time)\n- **Schema version**: `0.0.3` (latest is `0.0.10`; check `webhookVersion` in the payload)\n\n**reviewStatus values**: `INCOMPLETE_APPLICATION`, `ACTIVE_ACCOUNT`, `PLACEHOLDER_APPLICATION`, `INCOMPLETE_ACCOUNT`, `APPLICATION`, `PLACEHOLDER_ACCOUNT`, `REMOVED_ACCOUNT`, `REVIEW_ACCOUNT`, `REJECTED_APPLICATION`\n\n**Business type values**: `SOLE_PROPRIETORSHIP`, `PARTNERSHIP`, `LLC`, `COOPERATIVE`, `C_CORP`, `S_CORP`, `NON_PROFIT_ORGANIZATION`, `PUBLIC_AGENCY`\n\n## Authentication & Security\n\nEvery webhook includes cryptographic signatures to verify authenticity:\n\n**Headers:**\n\n- `X-NUVO-CERT-URL`: https://www.nuvo.com/assets/webhook_public_key.pub\n- `X-NUVO-SIGNATURE`: Base64-encoded ECDSA signature\n\n**Algorithm Details:**\n\n- Signature: ECDSA with curve secp384r1 (NIST P-384)\n- Hash: SHA-256 of the JSON payload\n- Encoding: ASN.1 DER format, Base64 encoded\n\nA Node.js verification example is included as a code sample on every event below.\n\n## Error Handling & Retry Logic\n\n- **Maximum attempts**: 10 retries over ~13 hours\n- **Backoff strategy**: Exponential backoff (90 seconds base, doubles each retry)\n- **Retry triggers**: Any non-200 HTTP status, network failures, timeouts\n- **Idempotency**: Use `eventUuid` to detect and skip duplicate events\n\nAfter maximum retries, the webhook is marked as failed but your webhook remains active for future events.\n\n## Monitoring & Troubleshooting\n\nOnce webhooks are enabled, you'll have access to a **Webhook Logs** tab in your Nuvo customer profile showing:\n\n- **All webhook deliveries** with timestamps and status\n- **Complete payloads** sent to your endpoint\n- **Your endpoint responses** (status codes, headers, response body)\n- **Retry attempts** and failure details\n\n### Common Issues\n\n1. **Webhooks not arriving**: Check your endpoint URL and firewall settings\n2. **Timeouts**: Ensure your endpoint responds within 10 seconds\n3. **Signature failures**: Verify you're using the correct public key and algorithm\n4. **Duplicate processing**: Use `eventUuid` for deduplication\n\n## Development & Testing\n\n- **Use Nuvo's testing portal** (under Settings \u2192 Integrations)\n- **Custom fields**: Two sections contain configurable fields that affect payload structure:\n    - `additionalFieldResponses`: Custom credit application questions and responses\n    - `internalFieldsValues`: Internal fields configured between supplier and Nuvo",
-    "version": "0.0.3",
+    "title": "Nuvo Webhooks v0.0.10 (current)",
+    "description": "# Overview\n\nNuvo emits HTTP POST webhook events to customer-configured endpoints when specific events occur in the credit application system. This enables real-time event-driven integrations without polling.\n\n## Webhook Event Types\n\nEvery webhook Nuvo emits delivers the **same payload shape**; only the `eventType` field differs. Inspect `eventType` to dispatch on the event:\n\n| `eventType`                          | Fires when                                                       |\n|--------------------------------------|------------------------------------------------------------------|\n| `CREDIT_APP_NEW`                     | A buyer submits a new credit application.                        |\n| `CREDIT_LIMIT_CHANGE`                | A credit limit is modified for an existing customer.             |\n| `CREDIT_APP_STATUS_CHANGE`           | An application's review status changes (approval, rejection, \u2026). |\n| `CUSTOMER_APP_SIGNATURE_REQUESTED`   | A signature is requested on a customer application.              |\n| `MANUAL`                             | A webhook is manually triggered (testing or special cases).      |\n\n## Request Format\n\n- **Method**: POST\n- **Content-Type**: application/json\n- **Timeout**: 10 seconds (your endpoint must respond within this time)\n- **Schema version**: `0.0.10` (latest; check `webhookVersion` in the payload)\n\n**reviewStatus values**: `INCOMPLETE_APPLICATION`, `ACTIVE_ACCOUNT`, `PLACEHOLDER_APPLICATION`, `INCOMPLETE_ACCOUNT`, `APPLICATION`, `PLACEHOLDER_ACCOUNT`, `REMOVED_ACCOUNT`, `REVIEW_ACCOUNT`, `REJECTED_APPLICATION`\n\n**Business type values**: `SOLE_PROPRIETORSHIP`, `PARTNERSHIP`, `LLC`, `COOPERATIVE`, `C_CORP`, `S_CORP`, `NON_PROFIT_ORGANIZATION`, `PUBLIC_AGENCY`\n\n## Authentication & Security\n\nEvery webhook includes cryptographic signatures to verify authenticity:\n\n**Headers:**\n\n- `X-NUVO-CERT-URL`: https://www.nuvo.com/assets/webhook_public_key.pub\n- `X-NUVO-SIGNATURE`: Base64-encoded ECDSA signature\n\n**Algorithm Details:**\n\n- Signature: ECDSA with curve secp384r1 (NIST P-384)\n- Hash: SHA-256 of the JSON payload\n- Encoding: ASN.1 DER format, Base64 encoded\n\nA Node.js verification example is included as a code sample on every event below.\n\n## Error Handling & Retry Logic\n\n- **Maximum attempts**: 10 retries over ~13 hours\n- **Backoff strategy**: Exponential backoff (90 seconds base, doubles each retry)\n- **Retry triggers**: Any non-200 HTTP status, network failures, timeouts\n- **Idempotency**: Use `eventUuid` to detect and skip duplicate events\n\nAfter maximum retries, the webhook is marked as failed but your webhook remains active for future events.\n\n## Monitoring & Troubleshooting\n\nOnce webhooks are enabled, you'll have access to a **Webhook Logs** tab in your Nuvo customer profile showing:\n\n- **All webhook deliveries** with timestamps and status\n- **Complete payloads** sent to your endpoint\n- **Your endpoint responses** (status codes, headers, response body)\n- **Retry attempts** and failure details\n\n### Common Issues\n\n1. **Webhooks not arriving**: Check your endpoint URL and firewall settings\n2. **Timeouts**: Ensure your endpoint responds within 10 seconds\n3. **Signature failures**: Verify you're using the correct public key and algorithm\n4. **Duplicate processing**: Use `eventUuid` for deduplication\n\n## Development & Testing\n\n- **Use Nuvo's testing portal** (under Settings \u2192 Integrations)\n- **Custom fields**: Two sections contain configurable fields that affect payload structure:\n    - `additionalFieldResponses`: Custom credit application questions and responses\n    - `internalFieldsValues`: Internal fields configured between supplier and Nuvo",
+    "version": "0.0.10",
     "license": {
       "name": "Proprietary"
     }
@@ -109,6 +109,12 @@
             "title": "Addresstype",
             "description": "Residential vs. business classification of the address.",
             "example": "BUSINESS"
+          },
+          "recordType": {
+            "type": "string",
+            "title": "Recordtype",
+            "description": "USPS record type code from Smarty metadata.",
+            "example": "S"
           }
         },
         "additionalProperties": false,
@@ -169,43 +175,6 @@
           "title"
         ],
         "title": "ApplicantInformation"
-      },
-      "Asset": {
-        "properties": {
-          "createdAt": {
-            "type": "string",
-            "title": "Createdat",
-            "description": "ISO 8601 timestamp when the asset was attached.",
-            "example": "2026-04-30T12:34:56Z"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name",
-            "description": "Display name of the asset.",
-            "example": "Articles_of_Incorporation.pdf"
-          },
-          "description": {
-            "type": "string",
-            "title": "Description",
-            "description": "Optional description of the asset.",
-            "example": "Filed with the Delaware Secretary of State."
-          },
-          "url": {
-            "type": "string",
-            "title": "Url",
-            "description": "Signed URL for downloading the asset.",
-            "example": "https://nuvo.com/secure-assets/123"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "createdAt",
-          "name",
-          "description",
-          "url"
-        ],
-        "title": "Asset"
       },
       "Buyer": {
         "properties": {
@@ -306,6 +275,24 @@
             ],
             "title": "Secretaryofstate",
             "description": "Secretary of State registration data for the buyer."
+          },
+          "primaryBusinessAddress": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Address"
+              }
+            ],
+            "title": "Primarybusinessaddress",
+            "description": "Buyer's primary operating business address."
+          },
+          "organizationBusinessAddress": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Address"
+              }
+            ],
+            "title": "Organizationbusinessaddress",
+            "description": "Address registered with the buyer's organizing jurisdiction."
           }
         },
         "additionalProperties": false,
@@ -617,16 +604,13 @@
             "description": "ISO 8601 date for the next scheduled review.",
             "example": "2027-04-30"
           },
-          "taxDocumentLinks": {
+          "taxDocuments": {
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/File"
             },
             "type": "array",
-            "title": "Taxdocumentlinks",
-            "description": "Signed URLs for tax documents (e.g., W-9) attached to the application.",
-            "example": [
-              "https://nuvo.com/secure-assets/123"
-            ]
+            "title": "Taxdocuments",
+            "description": "Tax documents (e.g., W-9, resale certificate) attached to the application. Pass each `id` to the public API to obtain a fresh download URL."
           },
           "defaultCreditLimit": {
             "type": "number",
@@ -649,15 +633,25 @@
           "additionalFieldResponses": {
             "type": "object",
             "title": "Additionalfieldresponses",
-            "description": "Responses to custom credit application questions.",
+            "description": "Responses to custom credit application questions, organized as `{section_key: {field_key: value}}`. As of v0.0.10, file-upload responses are emitted as a list of `File` objects (with NuvoIDs) rather than a list of permalink URL strings.",
             "example": {
-              "years_in_business": "5"
+              "years_in_business": "5",
+              "identification": {
+                "dlPhoto": [
+                  {
+                    "id": "file_a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4",
+                    "createdAt": "2026-04-30T12:34:56Z",
+                    "name": "license.jpg",
+                    "url": "https://nuvo.com/secure-assets/123"
+                  }
+                ]
+              }
             }
           },
           "internalFieldsValues": {
             "type": "object",
             "title": "Internalfieldsvalues",
-            "description": "Internal field values, organized as {section_key: {field_key: value}}.",
+            "description": "Internal field values, organized as `{section_key: {field_key: value}}`. As of v0.0.10, file-upload values are emitted as a list of `File` objects (with NuvoIDs) rather than a list of permalink URL strings.",
             "example": {
               "underwriting": {
                 "risk_tier": "A"
@@ -707,6 +701,20 @@
             "type": "array",
             "title": "Signatures",
             "description": "Signatures captured during the application flow."
+          },
+          "paymentBankAccounts": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentBankAccount"
+            },
+            "type": "array",
+            "title": "Paymentbankaccounts",
+            "description": "Only included when payment bank account export is enabled for the supplier."
+          },
+          "isSharedParentLimit": {
+            "type": "boolean",
+            "title": "Issharedparentlimit",
+            "description": "True when the credit limit is shared with a parent entity.",
+            "example": false
           }
         },
         "additionalProperties": false,
@@ -715,7 +723,7 @@
           "id",
           "applicantInformation",
           "reviewStatus",
-          "taxDocumentLinks",
+          "taxDocuments",
           "defaultCreditLimit",
           "defaultCreditTerms",
           "creditLimitCurrency",
@@ -726,9 +734,54 @@
           "salesRepresentatives",
           "flow",
           "notes",
-          "signatures"
+          "signatures",
+          "isSharedParentLimit"
         ],
         "title": "CreditApplication"
+      },
+      "File": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "NuvoID for this file. Pass to the public API to obtain a fresh download URL.",
+            "example": "file_01hxx9f8jk4m5n6p7q8r9s0t01"
+          },
+          "createdAt": {
+            "type": "string",
+            "title": "Createdat",
+            "description": "ISO 8601 timestamp when the file was attached.",
+            "example": "2026-04-30T12:34:56Z"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Display name of the file.",
+            "example": "Articles_of_Incorporation.pdf"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "Optional description of the file.",
+            "example": "Filed with the Delaware Secretary of State."
+          },
+          "url": {
+            "type": "string",
+            "title": "Url",
+            "description": "Permalink URL for the file (requires a logged-in dashboard session).",
+            "example": "https://nuvo.com/secure-assets/123"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "createdAt",
+          "name",
+          "description",
+          "url"
+        ],
+        "title": "File"
       },
       "HTTPValidationError": {
         "properties": {
@@ -779,12 +832,12 @@
             "description": "True if the note was generated by Nuvo rather than a human user.",
             "example": false
           },
-          "assets": {
+          "files": {
             "items": {
-              "$ref": "#/components/schemas/Asset"
+              "$ref": "#/components/schemas/File"
             },
             "type": "array",
-            "title": "Assets",
+            "title": "Files",
             "description": "Files attached to this note."
           }
         },
@@ -794,7 +847,7 @@
           "createdAt",
           "message",
           "isSystemNote",
-          "assets"
+          "files"
         ],
         "title": "Note"
       },
@@ -812,11 +865,11 @@
           "webhookVersion": {
             "type": "string",
             "enum": [
-              "0.0.3"
+              "0.0.10"
             ],
             "title": "Webhookversion",
             "description": "Payload schema version.",
-            "example": "0.0.3"
+            "example": "0.0.10"
           },
           "eventUuid": {
             "type": "string",
@@ -862,6 +915,83 @@
           "creditApplication"
         ],
         "title": "Payload"
+      },
+      "PaymentBankAccount": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Nuvo identifier for this bank account.",
+            "example": "ba_01HXX9F8JK4M5N6P7Q8R9S0T"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Display name or nickname for the bank account.",
+            "example": "Operating Account"
+          },
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookPaymentBankAccountType"
+              }
+            ],
+            "description": "Bank account type (e.g., checking, savings).",
+            "example": "CHECKING"
+          },
+          "accountNumber": {
+            "type": "string",
+            "title": "Accountnumber",
+            "description": "Bank account number.",
+            "example": "000123456789"
+          },
+          "routingNumber": {
+            "type": "string",
+            "title": "Routingnumber",
+            "description": "ABA routing number for the bank account.",
+            "example": "021000021"
+          },
+          "owners": {
+            "items": {
+              "$ref": "#/components/schemas/PaymentBankAccountOwner"
+            },
+            "type": "array",
+            "title": "Owners",
+            "description": "Account owners as reported by the bank."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "type",
+          "accountNumber",
+          "routingNumber",
+          "owners"
+        ],
+        "title": "PaymentBankAccount"
+      },
+      "PaymentBankAccountOwner": {
+        "properties": {
+          "names": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Names",
+            "description": "Names listed on the bank account as owners or signatories.",
+            "example": [
+              "Jane Doe"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "names"
+        ],
+        "title": "PaymentBankAccountOwner"
       },
       "Personnel": {
         "properties": {
@@ -1030,6 +1160,12 @@
             "title": "Customsignaturekey",
             "description": "Identifier for custom signature blocks (only present when kind='CUSTOM').",
             "example": "acme_master_agreement_v2"
+          },
+          "signedContent": {
+            "type": "string",
+            "title": "Signedcontent",
+            "description": "Raw markdown the signer accepted.",
+            "example": "I agree to the terms and conditions."
           }
         },
         "additionalProperties": false,
@@ -1039,7 +1175,8 @@
           "email",
           "phone",
           "title",
-          "kind"
+          "kind",
+          "signedContent"
         ],
         "title": "Signature"
       },
@@ -1086,6 +1223,16 @@
           "MANUAL"
         ],
         "title": "WebhookEventType",
+        "description": "An enumeration."
+      },
+      "WebhookPaymentBankAccountType": {
+        "type": "string",
+        "enum": [
+          "CHECKING",
+          "SAVINGS",
+          "OTHER"
+        ],
+        "title": "WebhookPaymentBankAccountType",
         "description": "An enumeration."
       },
       "WebhookResponse": {

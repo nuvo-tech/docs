@@ -27,9 +27,22 @@
         "icon": "webhook",
         "versions": [
           {
-            "version": "v0.0.9",
+            "version": "v0.0.10",
             "default": true,
             "tag": "Latest",
+            "groups": [
+              {
+                "group": "Get Started",
+                "pages": ["webhook-reference/v0_0_10/introduction"]
+              }
+            ],
+            "openapi": {
+              "source": "api_webhook_openapi_v0_0_10.json",
+              "directory": "webhooks/v0.0.10"
+            }
+          },
+          {
+            "version": "v0.0.9",
             "groups": [
               {
                 "group": "Get Started",
