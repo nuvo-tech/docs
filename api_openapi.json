@@ -245,6 +245,49 @@
           }
         }
       }
+    },
+    "/files/{file_id}/generate_url": {
+      "post": {
+        "tags": [
+          "Files"
+        ],
+        "summary": "Generate File Url",
+        "description": "Generate a short-lived presigned URL for downloading a file by its Nuvo ID.\n\n## Errors\n\n- **400 Bad Request**: The provided id is not a valid file id.\n- **403 Forbidden**: The file is not marked as downloadable.\n- **404 Not Found**: The file does not exist or does not belong to your organization.",
+        "operationId": "generate_file_url_files__file_id__generate_url_post",
+        "parameters": [
+          {
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "File Id"
+            },
+            "name": "file_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileUrlResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -855,6 +898,41 @@
         ],
         "title": "CustomerResponse",
         "description": "Customer object returned in list and get responses."
+      },
+      "FileUrlResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "The Nuvo ID of the file.",
+            "example": "file_a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At",
+            "description": "Timestamp at which the presigned URL expires.",
+            "example": "2026-04-30T12:39:56Z"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename",
+            "description": "The original filename of the file, if known.",
+            "example": "license.jpg"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url",
+            "description": "Short-lived signed URL the file can be downloaded from."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "expires_at",
+          "url"
+        ],
+        "title": "FileUrlResponse"
       },
       "HTTPValidationError": {
         "properties": {
